@@ -1,17 +1,15 @@
 import { Low } from 'lowdb'
 import { JSONFilePreset } from 'lowdb/node'
-
-export type DBData = {
-	users: unknown[]
-	events: unknown[]
-}
+import { DBData } from './types/db-data.mjs'
+import { dbDefaultData } from './db-default-data.mjs'
 
 export default class DB {
-	static defaultData = { users: [], events: [] }
 	db?: Low<DBData>
 
 	init = async () => {
-		this.db = await JSONFilePreset<DBData>('db.json', DB.defaultData)
+		console.log('initializing DB')
+		this.db = await JSONFilePreset<DBData>('db.json', dbDefaultData)
 		await this.db.write()
+		console.log('DB initialized')
 	}
 }

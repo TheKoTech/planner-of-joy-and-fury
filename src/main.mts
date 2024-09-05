@@ -1,36 +1,35 @@
 import dotenv from 'dotenv'
 import { Telegraf } from 'telegraf'
+import { busy } from './commands/busy.mjs'
+import { free } from './commands/free.mjs'
+import { games } from './commands/games.mjs'
+import { plan } from './commands/plan.mjs'
+import { settings } from './commands/settings.mjs'
+import { start } from './commands/start.mjs'
 import DB from './db.mjs'
 
 dotenv.config()
 
-const bot = new Telegraf(process.env.BOT_TOKEN!)
+if (!process.env.BOT_TOKEN) throw new Error('No token')
 
+const bot = new Telegraf(process.env.BOT_TOKEN)
 const db = new DB()
-db.init()
 
-bot.command('start', async ctx =>
-	ctx.telegram.sendMessage(ctx.message.chat.id, 'Hi bitch', {
-		reply_markup: {
-			resize_keyboard: true,
-			inline_keyboard: [
-				[{ text: 'Запланировать игру', callback_data: 'plan' }],
-				[{ text: 'Занятость', callback_data: 'availability' }],
-				[{ text: 'Мои игры', callback_data: 'games' }],
-				[{ text: 'Настройки', callback_data: 'settings' }],
-			],
-		},
-	}),
-)
+const createCommands = () => {
+	start(bot)
+	plan(bot)
+	free(bot)
+	busy(bot)
+	games(bot)
+	settings(bot)
+}
 
-bot.command('plan', async () => {})
-bot.command('free', async () => {})
-bot.command('busy', async () => {})
-bot.command('games', async () => {})
-bot.command('settings', async () => {})
+db.init().then(() => {
+	createCommands()
+	bot.launch()
+	console.log('Bot launched')
 
-bot.launch()
-
-// Enable graceful stop
-process.once('SIGINT', () => bot.stop('SIGINT'))
-process.once('SIGTERM', () => bot.stop('SIGTERM'))
+	// Enable graceful stop
+	process.once('SIGINT', () => bot.stop('SIGINT'))
+	process.once('SIGTERM', () => bot.stop('SIGTERM'))
+})
