@@ -1,4 +1,4 @@
-import { Telegraf } from 'telegraf';
+import { Telegraf } from 'telegraf'
 
-
-export const settings = (bot: Telegraf) => bot.command('settings', async () => { })
+export const settings = (bot: Telegraf) =>
+	bot.command('settings', async () => {})

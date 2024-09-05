@@ -1,4 +1,3 @@
-import { Telegraf } from 'telegraf';
+import { Telegraf } from 'telegraf'
 
-
-export const free = (bot: Telegraf) => bot.command('free', async () => { })
+export const free = (bot: Telegraf) => bot.command('free', async () => {})
