@@ -12,11 +12,13 @@
   "author": "welnyr",
   "license": "UNLICENSED",
   "dependencies": {
+    "dotenv": "^16.4.5",
     "lowdb": "^7.0.1",
     "telegraf": "^4.16.3"
   },
   "devDependencies": {
     "@eslint/js": "^9.9.1",
+    "@types/node": "^22.5.4",
     "eslint": "^9.9.1",
     "globals": "^15.9.0",
     "prettier": "^3.3.3",
