@@ -26,7 +26,7 @@ const createCommands = () => {
 
 db.init().then(() => {
 	createCommands()
-	bot.launch()
+	bot.launch().catch(e => console.error(e))
 	console.log('Bot launched')
 
 	// Enable graceful stop
