@@ -4,8 +4,8 @@
   "description": "A telegram bot for me and my friends",
   "main": "main.ts",
   "scripts": {
-    "prettier": "npx prettier src/ -w",
-    "lint": "npx eslint src/*",
+    "format": "npx @biomejs/biome format src/* --write",
+    "lint": "npx @biomejs/biome lint src/* --fix",
     "watch": "npx tsc -w",
     "build": "npx tsc -b"
   },
@@ -21,7 +21,6 @@
     "@types/node": "^22.5.4",
     "eslint": "^9.9.1",
     "globals": "^15.9.0",
-    "prettier": "^3.3.3",
     "typescript": "^5.5.4",
     "typescript-eslint": "^8.4.0"
   }

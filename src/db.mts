@@ -32,6 +32,6 @@ export default class DB {
 		this.db!.data.users[user.id] = newUser
 		this.db!.write()
 
-		return newUser;
+		return newUser
 	}
 }
