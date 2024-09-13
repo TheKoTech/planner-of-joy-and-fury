@@ -8,34 +8,35 @@ import { settings } from './commands/settings.mjs'
 import { start } from './commands/start.mjs'
 import DB from './db.mjs'
 import { BotContext } from './types/bot-context.mjs'
+import { CommandList } from './commands/command-list.mjs'
 
 dotenv.config()
 
 if (!process.env.BOT_TOKEN) throw new Error('No token')
 
-/** @todo ID */
-const scene1 = new Scenes.BaseScene<Scenes.SceneContext>('id1', {
-	enterHandlers: [],
-	handlers: [],
-	leaveHandlers: [],
-	ttl: 3600,
-})
-scene1.enter(async ctx => {
-	await ctx.reply('Entered Scene', {
-		reply_markup: {
-			inline_keyboard: [[Markup.button.callback('Ping', 'cb1')]],
-		},
-	})
-})
-scene1.action('cb1', async ctx => {
-	console.log('callback!', ctx)
-	return await ctx.reply(`pong`)
-})
-scene1.leave(async ctx => await ctx.reply('Left Scene'))
-scene1.hears('test', async ctx => await ctx.reply('Scene'))
-scene1.command('leave', async ctx => await ctx.scene.leave())
+// /** @todo ID */
+// const scene1 = new Scenes.BaseScene<Scenes.SceneContext>('id1', {
+// 	enterHandlers: [],
+// 	handlers: [],
+// 	leaveHandlers: [],
+// 	ttl: 3600,
+// })
+// scene1.enter(async ctx => {
+// 	await ctx.reply('Entered Scene', {
+// 		reply_markup: {
+// 			inline_keyboard: [[Markup.button.callback('Ping', 'cb1')]],
+// 		},
+// 	})
+// })
+// scene1.action('cb1', async ctx => {
+// 	console.log('callback!', ctx)
+// 	return await ctx.reply(`pong`)
+// })
+// scene1.leave(async ctx => await ctx.reply('Left Scene'))
+// scene1.hears('test', async ctx => await ctx.reply('Scene'))
+// scene1.command('leave', async ctx => await ctx.scene.leave())
 
-const stage = new Scenes.Stage<Scenes.SceneContext>([scene1])
+const stage = new Scenes.Stage<Scenes.SceneContext>([start, plan])
 
 const bot = new Telegraf<Scenes.SceneContext>(process.env.BOT_TOKEN)
 const db = new DB()
@@ -53,11 +54,8 @@ db.init().then(() => {
 	// createCommands();
 	bot.use(session())
 	bot.use(stage.middleware())
-	bot.command(
-		'sessions',
-		async ctx => await ctx.reply(`${ctx.session.__scenes}`),
-	)
-	bot.command('test1', async ctx => await ctx.scene.enter('id1'))
+	bot.command('start', async ctx => await ctx.scene.enter(CommandList.Start))
+	bot.command('plan', async ctx => await ctx.scene.enter(CommandList.Plan))
 
 	bot.launch().catch(e => console.error(e))
 	console.log('Bot launched')
