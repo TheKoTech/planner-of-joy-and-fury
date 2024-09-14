@@ -1,63 +1,98 @@
-import { Markup, Scenes } from 'telegraf'
+import { Context, Markup, Scenes } from 'telegraf'
 import { SceneList } from './scene-list.mjs'
+import DB from '../db.mjs'
+import { DBEvent, EventReplyStatus } from '../types/db-event.mjs'
 
-export const plan = new Scenes.BaseScene<Scenes.SceneContext>(
-	SceneList.Plan,
-	{
-		ttl: 7200,
-		/* these are here just because they're required */
-		enterHandlers: [],
-		handlers: [],
-		leaveHandlers: [],
-	},
-)
+export const plan = new Scenes.BaseScene<Scenes.SceneContext>(SceneList.Plan, {
+	ttl: 7200,
+	/* these are here just because they're required */
+	enterHandlers: [],
+	handlers: [],
+	leaveHandlers: [],
+})
 
 plan.enter(async ctx => {
-	// let user: User | undefined;
-
-	// if ('message' in ctx.update) user = ctx.update.message
-	// if ('callback_query' in ctx.update) user = ctx.chat
-	// if (!user) return; // @todo log
-
-	// user can be either in update.message or *.callback_query
-	// if (!('message' in ctx.update)) return
-
-	// const author = ctx.update.message.from
-	// const user = DB.getUser(author.id) ?? DB.addUser(author)
-
 	const message = `Напиши название`
-	// @todo availability
-	// if (user.availability) message += `Сегодня ${user.availability}\n\n`
-	// @todo daily events
-	// if blah blah blah
 
-	await ctx.telegram.sendMessage(
-		ctx.chat!.id,
-		message,
-		// {
-		// 	reply_markup: {
-		// 		resize_keyboard: true,
-		// 		inline_keyboard: [
-		// 			[Markup.button.callback('Объявить сбор', 'plan-game')],
-		// 			// [{ text: 'Объявить сбор', callback_data: 'plan' }],
-		// 			// [{ text: 'Занятость', callback_data: 'availability' }],
-		// 			// [{ text: 'Мои игры', callback_data: 'games' }],
-		// 			// [{ text: '', callback_data: 'games' }],
-		// 			// [{ text: 'Настройки', callback_data: 'settings' }],
-		// 		],
-		// 	},
-		// },
-	)
+	await ctx.telegram.sendMessage(ctx.chat!.id, message, {
+		disable_notification: true,
+	})
 })
 
+const messageOptions = {
+	disable_notification: true,
+	reply_markup: {
+		inline_keyboard: [
+			[Markup.button.callback('✅ Пойду', 'plan__accept')],
+			[Markup.button.callback('❌ Откажусь', 'plan__reject')],
+		],
+	},
+}
 plan.on('text', async ctx => {
-	ctx.telegram.sendMessage(ctx.chat.id, `Сбор на ${ctx.message.text}`, { reply_markup: {
-    resize_keyboard: true,
-    inline_keyboard: [
-      [Markup.button.callback('Пойду', 'plan__accept')],
-      [Markup.button.callback('Откажусь', 'plan__reject')],
-    ]
-  }})
+	const game = ctx.message.text
 
-	ctx.scene.leave()
+	const event: DBEvent = {
+		game: game,
+		replies: { [ctx.message.from.id]: EventReplyStatus.Accepted },
+	}
+
+	const text = getPlanMessageText(event)
+
+	const message = await ctx.telegram.sendMessage(
+		ctx.chat.id,
+		text,
+		messageOptions,
+	)
+
+	DB.createEvent(message.message_id, event)
+
+	await ctx.scene.leave()
 })
+
+function getPlanMessageText(event: DBEvent) {
+	let text = `Сбор на ${event.game}\n\n`
+	text += drawAvailabilityTable(event) + '\n\n'
+	text += getTags(event)
+
+	return text
+}
+
+function drawAvailabilityTable(event: DBEvent): string {
+	const users = DB.getUserList(
+		Object.entries(event.replies).map(([k]) => +k),
+	).map(u => u.displayName)
+
+	return users.join(' ')
+}
+
+export const setAccepted = async (ctx: Context, eventId: number) => {
+	if (!('callback_query' in ctx.update)) return
+
+	const updated = DB.updateEventReply(
+		eventId,
+		ctx.update.callback_query.from.id,
+		EventReplyStatus.Accepted,
+	)
+
+	if (!updated) return
+
+	const event = DB.getEvent(eventId)
+	if (!event) return
+
+	await ctx.telegram.editMessageText(
+		ctx.chat?.id,
+		eventId,
+		undefined,
+		getPlanMessageText(event),
+		messageOptions,
+	)
+}
+
+export const setRejected = async (ctx: Context, eventId: number) => {}
+
+function getTags(event: DBEvent) {
+	const userIds = Object.keys(event.replies).map(v => +v)
+	return DB.getUserList(userIds)
+		.map(u => `@${u.username}`)
+		.join(' ')
+}

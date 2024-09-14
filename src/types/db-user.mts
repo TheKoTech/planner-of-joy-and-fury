@@ -1,5 +1,6 @@
 export type DBUser = {
-	name: string
+	displayName: string
+	username: string
 	availability: unknown
 	gamesInterested: Record<string, unknown>
 	settings: Record<string, unknown>
