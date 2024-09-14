@@ -1,14 +1,15 @@
 import dotenv from 'dotenv'
 import { Markup, Scenes, session, Telegraf } from 'telegraf'
-import { busy } from './commands/busy.mjs'
-import { free } from './commands/free.mjs'
-import { games } from './commands/games.mjs'
-import { plan } from './commands/plan.mjs'
-import { settings } from './commands/settings.mjs'
-import { start } from './commands/start.mjs'
+import { busy } from './scenes/busy.mjs'
+import { free } from './scenes/free.mjs'
+import { games } from './scenes/games.mjs'
+import { plan } from './scenes/plan.mjs'
+import { settings } from './scenes/settings.mjs'
+import { start } from './scenes/start.mjs'
 import DB from './db.mjs'
 import { BotContext } from './types/bot-context.mjs'
-import { CommandList } from './commands/command-list.mjs'
+import { SceneList } from './scenes/scene-list.mjs'
+import { setName } from './scenes/set-name.mjs'
 
 dotenv.config()
 
@@ -36,7 +37,12 @@ if (!process.env.BOT_TOKEN) throw new Error('No token')
 // scene1.hears('test', async ctx => await ctx.reply('Scene'))
 // scene1.command('leave', async ctx => await ctx.scene.leave())
 
-const stage = new Scenes.Stage<Scenes.SceneContext>([start, plan])
+const stage = new Scenes.Stage<Scenes.SceneContext>([
+	start,
+	plan,
+	settings,
+	setName,
+])
 
 const bot = new Telegraf<Scenes.SceneContext>(process.env.BOT_TOKEN)
 const db = new DB()
@@ -54,8 +60,23 @@ db.init().then(() => {
 	// createCommands();
 	bot.use(session())
 	bot.use(stage.middleware())
-	bot.command('start', async ctx => await ctx.scene.enter(CommandList.Start))
-	bot.command('plan', async ctx => await ctx.scene.enter(CommandList.Plan))
+	bot.command('start', async ctx => await ctx.scene.enter(SceneList.Start))
+	bot.command('plan', async ctx => await ctx.scene.enter(SceneList.Plan))
+	bot.action('plan__accept', async ctx => {
+		if ('callback_query' in ctx.update) {
+			console.log(ctx.update.callback_query)
+		}
+	})
+	bot.action('plan__reject', async ctx => {
+		if ('callback_query' in ctx.update) {
+			console.log(ctx.update.callback_query)
+		}
+	})
+
+	bot.command(
+		'settings',
+		async ctx => await ctx.scene.enter(SceneList.Settings),
+	)
 
 	bot.launch().catch(e => console.error(e))
 	console.log('Bot launched')

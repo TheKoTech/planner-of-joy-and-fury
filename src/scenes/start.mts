@@ -1,8 +1,8 @@
 import { Markup, Scenes } from 'telegraf'
 import DB from '../db.mjs'
-import { CommandList } from './command-list.mjs'
+import { SceneList } from './scene-list.mjs'
 
-export const start = new Scenes.BaseScene<Scenes.SceneContext>(CommandList.Start, {
+export const start = new Scenes.BaseScene<Scenes.SceneContext>(SceneList.Start, {
 	ttl: 7200,
 	/* these are here just because they're required */
 	enterHandlers: [],

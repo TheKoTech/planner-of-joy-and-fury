@@ -6,7 +6,7 @@ import { DBData } from './types/db-data.mjs'
 import { DBUser } from './types/db-user.mjs'
 
 export default class DB {
-	static db?: Low<DBData>
+	static db: Low<DBData>
 
 	init = async () => {
 		console.log('initializing DB')
@@ -20,7 +20,7 @@ export default class DB {
 	}
 
 	static addUser(user: User): DBUser {
-		if (this.db!.data.users[user.id]) throw new Error('User exists')
+		if (this.db.data.users[user.id]) throw new Error('User exists')
 
 		const newUser = {
 			name: user.username ?? user.first_name,
@@ -29,9 +29,14 @@ export default class DB {
 			settings: {},
 		}
 
-		this.db!.data.users[user.id] = newUser
-		this.db!.write()
+		this.db.data.users[user.id] = newUser
+		this.db.write()
 
 		return newUser
+	}
+
+	static setUserName(id: number, newUserName: string): void {
+		this.db.data.users[id].name = newUserName
+		this.db.write();
 	}
 }

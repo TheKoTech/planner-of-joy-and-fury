@@ -1,8 +1,8 @@
 import { Markup, Scenes } from 'telegraf'
-import { CommandList } from './command-list.mjs'
+import { SceneList } from './scene-list.mjs'
 
 export const plan = new Scenes.BaseScene<Scenes.SceneContext>(
-	CommandList.Plan,
+	SceneList.Plan,
 	{
 		ttl: 7200,
 		/* these are here just because they're required */
@@ -50,9 +50,7 @@ plan.enter(async ctx => {
 	)
 })
 
-plan.on('message', async ctx => {
-  if (!('text' in ctx.message)) return;
-
+plan.on('text', async ctx => {
 	ctx.telegram.sendMessage(ctx.chat.id, `Сбор на ${ctx.message.text}`, { reply_markup: {
     resize_keyboard: true,
     inline_keyboard: [
