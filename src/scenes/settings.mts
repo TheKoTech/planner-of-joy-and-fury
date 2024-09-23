@@ -1,5 +1,5 @@
 import { Markup, Scenes } from 'telegraf'
-import { SceneList } from './scene-list.mjs'
+import { SceneList } from '../constants/scene-list.mjs'
 
 export const settings = new Scenes.BaseScene<Scenes.SceneContext>(
 	SceneList.Settings,

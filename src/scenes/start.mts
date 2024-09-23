@@ -1,6 +1,6 @@
 import { Markup, Scenes } from 'telegraf'
 import DB from '../db.mjs'
-import { SceneList } from './scene-list.mjs'
+import { SceneList } from '../constants/scene-list.mjs'
 
 export const start = new Scenes.BaseScene<Scenes.SceneContext>(
 	SceneList.Start,
@@ -19,7 +19,7 @@ start.enter(async ctx => {
 	const author = ctx.update.message.from
 	const user = DB.getUser(author.id) ?? DB.addUser(author)
 
-	if (!user) return await ctx.scene.leave();
+	if (!user) return await ctx.scene.leave()
 
 	const message = `Привет, ${user?.displayName}\n\n`
 	// @todo availability

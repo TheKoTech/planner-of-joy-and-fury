@@ -28,7 +28,7 @@ export default class DB {
 
 	/** forgot to include usernames to @tag them. I'm such a fucking idiot */
 	static autofillUsername(user: User): void {
-		const dbUser = this.db.data.users[user.id]
+		const dbUser = this.db.data.users[user.id] ?? this.addUser(user)
 
 		if (!user.username) return
 
@@ -59,26 +59,33 @@ export default class DB {
 		this.db.write()
 	}
 
-	static createEvent(id: number, event: DBEvent): void {
+	static createEvent(id: string, event: DBEvent): void {
 		this.db.data.events[id] = event
 		this.db.write()
 	}
 
-	static getEvent(id: number): DBEvent | undefined {
+	static getEvent(id: string): DBEvent | undefined {
 		return this.db.data.events[id]
 	}
 
+	static getEvents(): DBData['events'] {
+		return this.db.data.events
+	}
+
 	static updateEventReply(
-		eventId: number,
+		eventId: string,
 		userId: number,
 		replyStatus: EventReplyStatus,
 	): boolean {
 		const event = this.db.data.events[eventId]
 		if (!event) return false
 
-		if (event.replies[userId] === replyStatus) return false
+		if (event.replies[userId]?.status === replyStatus) return false
 
-		event.replies[userId] = replyStatus
+		event.replies[userId] = {
+			...event.replies[userId],
+			status: replyStatus,
+		}
 		this.db.write()
 
 		return true

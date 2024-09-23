@@ -1,15 +1,16 @@
 export type DBEvent = {
 	game: string
-	replies: Record<number, EventReplyStatus>
-	name?: string
+	/** key is user id*/
+	replies: Record<number, Reply>
+	displayName?: string
 }
 
-// type Reply = {
-// 	userId: number
-// 	status: EventReplyStatus
-// }
+type Reply = {
+	status: EventReplyStatus
+}
 
 export enum EventReplyStatus {
 	Accepted,
+	Considering,
 	Rejected,
 }

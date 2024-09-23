@@ -1,5 +1,5 @@
 import { Context, Markup, Scenes } from 'telegraf'
-import { SceneList } from './scene-list.mjs'
+import { SceneList } from '../constants/scene-list.mjs'
 import DB from '../db.mjs'
 import { DBEvent, EventReplyStatus } from '../types/db-event.mjs'
 
@@ -28,12 +28,13 @@ const messageOptions = {
 		],
 	},
 }
+
 plan.on('text', async ctx => {
 	const game = ctx.message.text
 
 	const event: DBEvent = {
 		game: game,
-		replies: { [ctx.message.from.id]: EventReplyStatus.Accepted },
+		replies: { [ctx.message.from.id]: { status: EventReplyStatus.Accepted } },
 	}
 
 	const text = getPlanMessageText(event)
@@ -44,7 +45,7 @@ plan.on('text', async ctx => {
 		messageOptions,
 	)
 
-	DB.createEvent(message.message_id, event)
+	DB.createEvent(`${message.chat.id}:${message.message_id}`, event)
 
 	await ctx.scene.leave()
 })
@@ -65,23 +66,31 @@ function drawAvailabilityTable(event: DBEvent): string {
 	return users.join(' ')
 }
 
-export const setAccepted = async (ctx: Context, eventId: number) => {
+export const handleAccepted = async (ctx: Context) => {
 	if (!('callback_query' in ctx.update)) return
+	if (!ctx.chat) return
 
-	const updated = DB.updateEventReply(
+	const msg = ctx.update.callback_query.message
+
+	if (!msg) return
+
+	const eventId = `${msg.chat.id}:${msg.message_id}`
+
+	const statusChanged = DB.updateEventReply(
 		eventId,
 		ctx.update.callback_query.from.id,
 		EventReplyStatus.Accepted,
 	)
 
-	if (!updated) return
+	if (!statusChanged) return
 
 	const event = DB.getEvent(eventId)
+
 	if (!event) return
 
 	await ctx.telegram.editMessageText(
-		ctx.chat?.id,
-		eventId,
+		msg.chat.id,
+		msg.message_id,
 		undefined,
 		getPlanMessageText(event),
 		messageOptions,

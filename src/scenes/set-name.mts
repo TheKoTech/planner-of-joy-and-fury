@@ -1,6 +1,6 @@
 import { Scenes } from 'telegraf'
 import DB from '../db.mjs'
-import { SceneList } from './scene-list.mjs'
+import { SceneList } from '../constants/scene-list.mjs'
 
 export const setName = new Scenes.BaseScene<Scenes.SceneContext>(
 	SceneList.SetName,
@@ -16,8 +16,6 @@ export const setName = new Scenes.BaseScene<Scenes.SceneContext>(
 setName.enter(async ctx => {
 	let from
 	let originalMsg
-
-	console.log(ctx)
 
 	if ('message' in ctx.update) from = ctx.update.message.from.id
 	if ('callback_query' in ctx.update) {

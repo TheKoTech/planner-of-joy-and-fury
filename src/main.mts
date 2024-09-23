@@ -1,11 +1,12 @@
 import dotenv from 'dotenv'
 import { Scenes, session, Telegraf } from 'telegraf'
 import DB from './db.mjs'
-import { plan, setAccepted } from './scenes/plan.mjs'
-import { SceneList } from './scenes/scene-list.mjs'
+import { plan, handleAccepted } from './scenes/plan.mjs'
+import { SceneList } from './constants/scene-list.mjs'
 import { setName } from './scenes/set-name.mjs'
 import { settings } from './scenes/settings.mjs'
 import { start } from './scenes/start.mjs'
+import { listEvents } from './scenes/list-events.mjs'
 
 dotenv.config()
 
@@ -16,6 +17,7 @@ const stage = new Scenes.Stage<Scenes.SceneContext>([
 	plan,
 	settings,
 	setName,
+	listEvents
 ])
 
 const bot = new Telegraf<Scenes.SceneContext>(process.env.BOT_TOKEN)
@@ -33,7 +35,7 @@ db.init().then(() => {
 
 		console.log('set accepted!')
 
-		await setAccepted(ctx, message?.message_id)
+		await handleAccepted(ctx)
 	})
 	bot.action('plan__reject', async ctx => {})
 
@@ -43,6 +45,11 @@ db.init().then(() => {
 	)
 
 	bot.command('setname', async ctx => await ctx.scene.enter(SceneList.SetName))
+
+	bot.command(
+		'listevents',
+		async ctx => await ctx.scene.enter(SceneList.ListEvents),
+	)
 
 	bot.command(
 		'crash',
