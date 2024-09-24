@@ -7,48 +7,48 @@ import { setName } from './scenes/set-name.mjs'
 import { settings } from './scenes/settings.mjs'
 import { start } from './scenes/start.mjs'
 import { listEvents } from './scenes/list-events.mjs'
+import { SceneContext } from './types/scene-context.mjs'
+import { BotContext } from './types/bot-context.mjs'
 
 dotenv.config()
 
 if (!process.env.BOT_TOKEN) throw new Error('No token')
 
-const stage = new Scenes.Stage<Scenes.SceneContext>([
+const stage = new Scenes.Stage<Scenes.SceneContext<SceneContext>>([
 	start,
 	plan,
 	settings,
 	setName,
-	listEvents
+	listEvents,
 ])
 
-const bot = new Telegraf<Scenes.SceneContext>(process.env.BOT_TOKEN)
+const bot = new Telegraf<BotContext>(process.env.BOT_TOKEN)
 const db = new DB()
 
 db.init().then(() => {
 	bot.use(session())
 	bot.use(stage.middleware())
-	bot.command('start', async ctx => await ctx.scene.enter(SceneList.Start))
+	bot.command('start', async (ctx) => await ctx.scene.enter(SceneList.Start))
 
-	bot.command('plan', async ctx => await ctx.scene.enter(SceneList.Plan))
-	bot.action('plan__accept', async ctx => {
-		const message = ctx.update.callback_query.message
-		if (!message) return
-
-		console.log('set accepted!')
-
+	bot.command('plan', async (ctx) => await ctx.scene.enter(SceneList.Plan))
+	bot.action(/^plan__accept:?/, async (ctx) => {
 		await handleAccepted(ctx)
 	})
-	bot.action('plan__reject', async ctx => {})
+	// bot.action(/^plan__reject:?/, async (ctx) => {})
 
 	bot.command(
 		'settings',
-		async ctx => await ctx.scene.enter(SceneList.Settings),
+		async (ctx) => await ctx.scene.enter(SceneList.Settings)
 	)
 
-	bot.command('setname', async ctx => await ctx.scene.enter(SceneList.SetName))
+	bot.command(
+		'setname',
+		async (ctx) => await ctx.scene.enter(SceneList.SetName)
+	)
 
 	bot.command(
 		'listevents',
-		async ctx => await ctx.scene.enter(SceneList.ListEvents),
+		async (ctx) => await ctx.scene.enter(SceneList.ListEvents)
 	)
 
 	bot.command(
@@ -59,20 +59,20 @@ db.init().then(() => {
 				{
 					source: 'src/assets/i fell.png',
 				},
-				{ disable_notification: true },
-			),
+				{ disable_notification: true }
+			)
 	)
 
 	/** @todo delete when DB is filled */
-	bot.on('message', async ctx => DB.autofillUsername(ctx.message.from))
+	bot.on('message', async (ctx) => DB.autofillUsername(ctx.message.from))
 
-	bot.launch().catch(e => {
+	bot.launch().catch((e) => {
 		console.error(e)
-		return bot.telegram.sendPhoto(
-			-1001964753343,
-			{ source: 'src/assets/i fell.png' },
-			{ disable_notification: true },
-		)
+		// return bot.telegram.sendPhoto(
+		// 	-1001964753343,
+		// 	{ source: 'src/assets/i fell.png' },
+		// 	{ disable_notification: true },
+		// )
 	})
 	console.log('Bot launched')
 

@@ -1,8 +1,9 @@
 import { Scenes } from 'telegraf'
-import DB from '../db.mjs'
 import { SceneList } from '../constants/scene-list.mjs'
+import DB from '../db.mjs'
+import { SceneContext } from '../types/scene-context.mjs'
 
-export const setName = new Scenes.BaseScene<Scenes.SceneContext>(
+export const setName = new Scenes.BaseScene<Scenes.SceneContext<SceneContext>>(
 	SceneList.SetName,
 	{
 		ttl: 7200,
