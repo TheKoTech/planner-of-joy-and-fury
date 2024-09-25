@@ -60,7 +60,7 @@ listEvents.action(/^display_pin:(.*)$/, async ctx => {
 	await ctx.telegram.sendMessage(
 		callback.message.chat.id,
 		getEventMessageText(event),
-		eventMessageOptions
+		eventMessageOptions,
 	)
 })
 listEvents.action(

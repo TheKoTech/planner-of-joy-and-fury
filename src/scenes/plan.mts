@@ -25,8 +25,6 @@ plan.enter(async ctx => {
 	})
 })
 
-
-
 plan.on('text', async ctx => {
 	const game = ctx.message.text
 
