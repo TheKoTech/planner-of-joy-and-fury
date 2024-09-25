@@ -1,18 +1,23 @@
-import { Context, Markup, Scenes } from 'telegraf'
+import { Context, Scenes } from 'telegraf'
+import { eventMessageOptions } from '../constants/event-message-options.mjs'
 import { SceneList } from '../constants/scene-list.mjs'
 import DB from '../db.mjs'
 import { DBEvent, EventReplyStatus } from '../types/db-event.mjs'
 import { SceneContext } from '../types/scene-context.mjs'
+import { getEventMessageText } from '../utils/get-event-message-text.mjs'
 
-export const plan = new Scenes.BaseScene<Scenes.SceneContext<SceneContext>>(SceneList.Plan, {
-	ttl: 7200,
-	/* these are here just because they're required */
-	enterHandlers: [],
-	handlers: [],
-	leaveHandlers: [],
-})
+export const plan = new Scenes.BaseScene<Scenes.SceneContext<SceneContext>>(
+	SceneList.Plan,
+	{
+		ttl: 7200,
+		/* these are here just because they're required */
+		enterHandlers: [],
+		handlers: [],
+		leaveHandlers: [],
+	},
+)
 
-plan.enter(async (ctx) => {
+plan.enter(async ctx => {
 	const message = `Напиши название`
 
 	await ctx.telegram.sendMessage(ctx.chat!.id, message, {
@@ -20,17 +25,9 @@ plan.enter(async (ctx) => {
 	})
 })
 
-const messageOptions = {
-	disable_notification: true,
-	reply_markup: {
-		inline_keyboard: [
-			[Markup.button.callback('✅ Пойду', 'plan__accept')],
-			[Markup.button.callback('❌ Откажусь', 'plan__reject')],
-		],
-	},
-}
 
-plan.on('text', async (ctx) => {
+
+plan.on('text', async ctx => {
 	const game = ctx.message.text
 
 	const event: DBEvent = {
@@ -38,12 +35,12 @@ plan.on('text', async (ctx) => {
 		replies: { [ctx.message.from.id]: { status: EventReplyStatus.Accepted } },
 	}
 
-	const text = getPlanMessageText(event)
+	const text = getEventMessageText(event)
 
 	const message = await ctx.telegram.sendMessage(
 		ctx.chat.id,
 		text,
-		messageOptions
+		eventMessageOptions,
 	)
 
 	DB.createEvent(`${message.chat.id}:${message.message_id}`, event)
@@ -51,18 +48,10 @@ plan.on('text', async (ctx) => {
 	await ctx.scene.leave()
 })
 
-function getPlanMessageText(event: DBEvent) {
-	let text = `Сбор на ${event.game}\n\n`
-	text += drawAvailabilityTable(event) + '\n\n'
-	text += getTags(event)
-
-	return text
-}
-
-function drawAvailabilityTable(event: DBEvent): string {
+export function drawAvailabilityTable(event: DBEvent): string {
 	const users = DB.getUserList(
-		Object.entries(event.replies).map(([k]) => +k)
-	).map((u) => u.displayName)
+		Object.entries(event.replies).map(([k]) => +k),
+	).map(u => u.displayName)
 
 	return users.join(' ')
 }
@@ -79,7 +68,7 @@ export const handleAccepted = async (ctx: Context) => {
 	const statusChanged = DB.updateEventReply(
 		eventId,
 		ctx.update.callback_query.from.id,
-		EventReplyStatus.Accepted
+		EventReplyStatus.Accepted,
 	)
 
 	if (!statusChanged) return
@@ -92,16 +81,16 @@ export const handleAccepted = async (ctx: Context) => {
 		msg.chat.id,
 		msg.message_id,
 		undefined,
-		getPlanMessageText(event),
-		messageOptions
+		getEventMessageText(event),
+		eventMessageOptions,
 	)
 }
 
 export const setRejected = async (ctx: Context, eventId: number) => {}
 
-function getTags(event: DBEvent) {
-	const userIds = Object.keys(event.replies).map((v) => +v)
+export function getTags(event: DBEvent) {
+	const userIds = Object.keys(event.replies).map(v => +v)
 	return DB.getUserList(userIds)
-		.map((u) => `@${u.username}`)
+		.map(u => `@${u.username}`)
 		.join(' ')
 }

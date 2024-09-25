@@ -28,27 +28,24 @@ const db = new DB()
 db.init().then(() => {
 	bot.use(session())
 	bot.use(stage.middleware())
-	bot.command('start', async (ctx) => await ctx.scene.enter(SceneList.Start))
+	bot.command('start', async ctx => await ctx.scene.enter(SceneList.Start))
 
-	bot.command('plan', async (ctx) => await ctx.scene.enter(SceneList.Plan))
-	bot.action(/^plan__accept:?/, async (ctx) => {
+	bot.command('plan', async ctx => await ctx.scene.enter(SceneList.Plan))
+	bot.action(/^plan__accept:?/, async ctx => {
 		await handleAccepted(ctx)
 	})
 	// bot.action(/^plan__reject:?/, async (ctx) => {})
 
 	bot.command(
 		'settings',
-		async (ctx) => await ctx.scene.enter(SceneList.Settings)
+		async ctx => await ctx.scene.enter(SceneList.Settings),
 	)
 
-	bot.command(
-		'setname',
-		async (ctx) => await ctx.scene.enter(SceneList.SetName)
-	)
+	bot.command('setname', async ctx => await ctx.scene.enter(SceneList.SetName))
 
 	bot.command(
 		'listevents',
-		async (ctx) => await ctx.scene.enter(SceneList.ListEvents)
+		async ctx => await ctx.scene.enter(SceneList.ListEvents),
 	)
 
 	bot.command(
@@ -59,20 +56,20 @@ db.init().then(() => {
 				{
 					source: 'src/assets/i fell.png',
 				},
-				{ disable_notification: true }
-			)
+				{ disable_notification: true },
+			),
 	)
 
 	/** @todo delete when DB is filled */
-	bot.on('message', async (ctx) => DB.autofillUsername(ctx.message.from))
+	bot.on('message', async ctx => DB.autofillUsername(ctx.message.from))
 
-	bot.launch().catch((e) => {
+	bot.launch().catch(e => {
 		console.error(e)
-		// return bot.telegram.sendPhoto(
-		// 	-1001964753343,
-		// 	{ source: 'src/assets/i fell.png' },
-		// 	{ disable_notification: true },
-		// )
+		return bot.telegram.sendPhoto(
+			-1001964753343,
+			{ source: 'src/assets/i fell.png' },
+			{ disable_notification: true },
+		)
 	})
 	console.log('Bot launched')
 
