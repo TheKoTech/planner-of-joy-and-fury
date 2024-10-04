@@ -4,7 +4,8 @@ import { JSONFilePreset } from 'lowdb/node'
 import { dbDefaultData } from './db-default-data.mjs'
 import { DBData } from './types/db-data.mjs'
 import { DBUser } from './types/db-user.mjs'
-import { DBEvent, EventReplyStatus } from './types/db-event.mjs'
+import { DBEvent } from './types/db-event.mjs'
+import { EventReplyStatus } from './enums/event-reply-status.mjs'
 
 export default class DB {
 	static db: Low<DBData>
@@ -64,8 +65,17 @@ export default class DB {
 		this.db.write()
 	}
 
+	static createEventLink(sourceId: string, targetId: string) {
+		this.db.data.eventLinks[targetId] = sourceId
+		this.db.write()
+	}
+
 	static getEvent(id: string): DBEvent | undefined {
-		return this.db.data.events[id]
+		let event: DBEvent | undefined = this.db.data.events[id]
+
+		event ??= DB.getEvent(this.db.data.eventLinks[id])
+
+		return event
 	}
 
 	static getEvents(): DBData['events'] {
@@ -75,10 +85,17 @@ export default class DB {
 	static updateEventReply(
 		eventId: string,
 		userId: number,
-		replyStatus: EventReplyStatus,
+		replyStatus: EventReplyStatus
 	): boolean {
-		const event = this.db.data.events[eventId]
+		const event = DB.getEvent(eventId)
+
+		if (!event) {
+			console.log(`event not found: ${eventId}`)
+		}
+
 		if (!event) return false
+
+		console.log({ reply: event.replies[userId], replyStatus })
 
 		if (event.replies[userId]?.status === replyStatus) return false
 

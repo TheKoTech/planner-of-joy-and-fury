@@ -1,5 +1,5 @@
 import { Markup, Scenes } from 'telegraf'
-import { SceneList } from '../constants/scene-list.mjs'
+import { SceneList } from '../enums/scene-list.mjs'
 import DB from '../db.mjs'
 import { SceneContext } from '../types/scene-context.mjs'
 import { getEventMessageText } from '../utils/get-event-message-text.mjs'
@@ -17,17 +17,17 @@ export const listEvents = new Scenes.BaseScene<
 	leaveHandlers: [],
 })
 
-listEvents.enter(async ctx => {
+listEvents.enter(async (ctx) => {
 	ctx.scene.session.page = 0
 	await showPage(ctx)
 })
 
-listEvents.action(/^page:(.+)$/, async ctx => {
+listEvents.action(/^page:(.+)$/, async (ctx) => {
 	ctx.scene.session.page = parseInt(ctx.match[1])
 	await showPage(ctx)
 })
 
-listEvents.action(/^display:(.+)$/, async ctx => {
+listEvents.action(/^display:(.+)$/, async (ctx) => {
 	const eventId = ctx.match[1]
 	const event = DB.getEvent(eventId)
 
@@ -36,18 +36,18 @@ listEvents.action(/^display:(.+)$/, async ctx => {
 
 	const text = getEventMessageText(event)
 
-	return ctx.editMessageText(
-		text,
-		Markup.inlineKeyboard([
-			Markup.button.callback('⬅️', 'display_back'),
-			Markup.button.callback('📌', `display_pin:${eventId}`),
-			Markup.button.callback('🔄', 'display_refresh'),
+	return ctx.editMessageText(text, {
+		...Markup.inlineKeyboard([
+			Markup.button.callback('⬅️', 'display__back'),
+			Markup.button.callback('📌', `display__pin:${eventId}`),
+			Markup.button.callback('🔄', 'display__refresh'),
 		]),
-	)
+		parse_mode: 'MarkdownV2',
+	})
 })
 
-listEvents.action('display_back', async ctx => await showPage(ctx))
-listEvents.action(/^display_pin:(.*)$/, async ctx => {
+listEvents.action('display__back', async (ctx) => await showPage(ctx))
+listEvents.action(/^display__pin:(.*)$/, async (ctx) => {
 	const callback = ctx.update.callback_query
 	const eventId = ctx.match[1]
 	const event = DB.getEvent(eventId)
@@ -57,18 +57,22 @@ listEvents.action(/^display_pin:(.*)$/, async ctx => {
 
 	await ctx.deleteMessage(callback.message?.message_id)
 	await ctx.scene.leave()
-	await ctx.telegram.sendMessage(
+	const message = await ctx.telegram.sendMessage(
 		callback.message.chat.id,
 		getEventMessageText(event),
-		eventMessageOptions,
+		eventMessageOptions
 	)
+
+	const linkId = `${message.chat.id}:${message.message_id}`
+	DB.createEventLink(eventId, linkId)
 })
+
 listEvents.action(
-	'display_refresh',
-	async ctx => await ctx.answerCbQuery('refresh'),
+	'display__refresh',
+	async (ctx) => await ctx.answerCbQuery('refresh')
 )
 
-listEvents.action(/^display:(.*)$/, async ctx => console.log(ctx.update))
+listEvents.action(/^display:(.*)$/, async (ctx) => console.log(ctx.update))
 
 async function showPage(ctx: Scenes.SceneContext<SceneContext>) {
 	let originalMsg
@@ -96,13 +100,13 @@ async function showPage(ctx: Scenes.SceneContext<SceneContext>) {
 				: { text: ' ', callback_data: 'noop' },
 			Markup.button.callback(
 				`${page + 1}/${Math.ceil(events.length / ITEMS_PER_PAGE)}`,
-				'noop',
+				'noop'
 			),
 			page < Math.floor(events.length / ITEMS_PER_PAGE)
 				? Markup.button.callback('➡️', `page:${page + 1}`)
 				: { text: ' ', callback_data: 'noop' },
 			...pageEvents.map(([k, pe]) =>
-				Markup.button.callback(pe.displayName ?? pe.game, `display:${k}`),
+				Markup.button.callback(pe.displayName ?? pe.game, `display:${k}`)
 			),
 		],
 		{
@@ -110,13 +114,13 @@ async function showPage(ctx: Scenes.SceneContext<SceneContext>) {
 			wrap(_, index) {
 				return index >= 3
 			},
-		},
+		}
 	)
 
 	if (originalMsg) {
-		return ctx.editMessageText(text, keyboard)
+		return ctx.editMessageText(text, { ...keyboard, parse_mode: 'MarkdownV2' })
 	} else {
-		if (isEmpty) return ctx.reply('Событий нет')
-		return ctx.reply(text, keyboard)
+		if (isEmpty) return ctx.replyWithMarkdown('Событий нет')
+		return ctx.reply(text, { ...keyboard, parse_mode: 'MarkdownV2' })
 	}
 }

@@ -1,14 +1,15 @@
 import dotenv from 'dotenv'
 import { Scenes, session, Telegraf } from 'telegraf'
 import DB from './db.mjs'
-import { plan, handleAccepted } from './scenes/plan.mjs'
-import { SceneList } from './constants/scene-list.mjs'
+import { plan, handleEventReply } from './scenes/plan.mjs'
+import { SceneList } from './enums/scene-list.mjs'
 import { setName } from './scenes/set-name.mjs'
 import { settings } from './scenes/settings.mjs'
 import { start } from './scenes/start.mjs'
 import { listEvents } from './scenes/list-events.mjs'
 import { SceneContext } from './types/scene-context.mjs'
 import { BotContext } from './types/bot-context.mjs'
+import { EventReplyStatus } from './enums/event-reply-status.mjs'
 
 dotenv.config()
 
@@ -32,9 +33,14 @@ db.init().then(() => {
 
 	bot.command('plan', async ctx => await ctx.scene.enter(SceneList.Plan))
 	bot.action(/^plan__accept:?/, async ctx => {
-		await handleAccepted(ctx)
+		await handleEventReply(ctx, EventReplyStatus.Accepted)
 	})
-	// bot.action(/^plan__reject:?/, async (ctx) => {})
+	bot.action(/^plan__consider:?/, async ctx => {
+		await handleEventReply(ctx, EventReplyStatus.Considering)
+	})
+	bot.action(/^plan__reject:?/, async ctx => {
+		await handleEventReply(ctx, EventReplyStatus.Rejected)
+	})
 
 	bot.command(
 		'settings',
@@ -57,7 +63,7 @@ db.init().then(() => {
 					source: 'src/assets/i fell.png',
 				},
 				{ disable_notification: true },
-			),
+			).then(async () => bot.stop('SIGINT')),
 	)
 
 	/** @todo delete when DB is filled */

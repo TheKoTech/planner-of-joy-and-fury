@@ -1,3 +1,5 @@
+import { EventReplyStatus } from '../enums/event-reply-status.mjs'
+
 export type DBEvent = {
 	game: string
 	/** key is user id*/
@@ -9,8 +11,4 @@ type Reply = {
 	status: EventReplyStatus
 }
 
-export enum EventReplyStatus {
-	Accepted,
-	Considering,
-	Rejected,
-}
+

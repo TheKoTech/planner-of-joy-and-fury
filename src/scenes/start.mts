@@ -1,6 +1,6 @@
 import { Markup, Scenes } from 'telegraf'
 import DB from '../db.mjs'
-import { SceneList } from '../constants/scene-list.mjs'
+import { SceneList } from '../enums/scene-list.mjs'
 import { SceneContext } from '../types/scene-context.mjs'
 
 export const start = new Scenes.BaseScene<Scenes.SceneContext<SceneContext>>(

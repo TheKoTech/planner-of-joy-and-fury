@@ -1,8 +1,9 @@
 import { Context, Scenes } from 'telegraf'
 import { eventMessageOptions } from '../constants/event-message-options.mjs'
-import { SceneList } from '../constants/scene-list.mjs'
+import { SceneList } from '../enums/scene-list.mjs'
 import DB from '../db.mjs'
-import { DBEvent, EventReplyStatus } from '../types/db-event.mjs'
+import { DBEvent } from '../types/db-event.mjs'
+import { EventReplyStatus } from '../enums/event-reply-status.mjs'
 import { SceneContext } from '../types/scene-context.mjs'
 import { getEventMessageText } from '../utils/get-event-message-text.mjs'
 
@@ -14,10 +15,10 @@ export const plan = new Scenes.BaseScene<Scenes.SceneContext<SceneContext>>(
 		enterHandlers: [],
 		handlers: [],
 		leaveHandlers: [],
-	},
+	}
 )
 
-plan.enter(async ctx => {
+plan.enter(async (ctx) => {
 	const message = `Напиши название`
 
 	await ctx.telegram.sendMessage(ctx.chat!.id, message, {
@@ -25,7 +26,7 @@ plan.enter(async ctx => {
 	})
 })
 
-plan.on('text', async ctx => {
+plan.on('text', async (ctx) => {
 	const game = ctx.message.text
 
 	const event: DBEvent = {
@@ -38,7 +39,7 @@ plan.on('text', async ctx => {
 	const message = await ctx.telegram.sendMessage(
 		ctx.chat.id,
 		text,
-		eventMessageOptions,
+		eventMessageOptions
 	)
 
 	DB.createEvent(`${message.chat.id}:${message.message_id}`, event)
@@ -46,15 +47,10 @@ plan.on('text', async ctx => {
 	await ctx.scene.leave()
 })
 
-export function drawAvailabilityTable(event: DBEvent): string {
-	const users = DB.getUserList(
-		Object.entries(event.replies).map(([k]) => +k),
-	).map(u => u.displayName)
-
-	return users.join(' ')
-}
-
-export const handleAccepted = async (ctx: Context) => {
+export const handleEventReply = async (
+	ctx: Context,
+	replyStatus: EventReplyStatus
+) => {
 	if (!('callback_query' in ctx.update)) return
 	if (!ctx.chat) return
 
@@ -66,7 +62,7 @@ export const handleAccepted = async (ctx: Context) => {
 	const statusChanged = DB.updateEventReply(
 		eventId,
 		ctx.update.callback_query.from.id,
-		EventReplyStatus.Accepted,
+		replyStatus
 	)
 
 	if (!statusChanged) return
@@ -75,20 +71,14 @@ export const handleAccepted = async (ctx: Context) => {
 
 	if (!event) return
 
+	const text = getEventMessageText(event)
+	console.log({ text })
+
 	await ctx.telegram.editMessageText(
 		msg.chat.id,
 		msg.message_id,
 		undefined,
-		getEventMessageText(event),
-		eventMessageOptions,
+		text,
+		eventMessageOptions
 	)
-}
-
-export const setRejected = async (ctx: Context, eventId: number) => {}
-
-export function getTags(event: DBEvent) {
-	const userIds = Object.keys(event.replies).map(v => +v)
-	return DB.getUserList(userIds)
-		.map(u => `@${u.username}`)
-		.join(' ')
 }
