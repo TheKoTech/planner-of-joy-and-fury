@@ -54,17 +54,17 @@ db.init().then(() => {
 		async ctx => await ctx.scene.enter(SceneList.ListEvents),
 	)
 
-	bot.command(
-		'crash',
-		async () =>
-			await bot.telegram.sendPhoto(
-				-1001964753343,
-				{
-					source: 'src/assets/i fell.png',
-				},
-				{ disable_notification: true },
-			).then(async () => bot.stop('SIGINT')),
-	)
+	// bot.command(
+	// 	'crash',
+	// 	async () =>
+	// 		await bot.telegram.sendPhoto(
+	// 			-1001964753343,
+	// 			{
+	// 				source: 'src/assets/i fell.png',
+	// 			},
+	// 			{ disable_notification: true },
+	// 		).then(async () => bot.stop('SIGINT')),
+	// )
 
 	/** @todo delete when DB is filled */
 	bot.on('message', async ctx => DB.autofillUsername(ctx.message.from))

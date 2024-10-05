@@ -11,10 +11,10 @@ export const setName = new Scenes.BaseScene<Scenes.SceneContext<SceneContext>>(
 		enterHandlers: [],
 		handlers: [],
 		leaveHandlers: [],
-	},
+	}
 )
 
-setName.enter(async ctx => {
+setName.enter(async (ctx) => {
 	let from
 	let originalMsg
 
@@ -33,12 +33,20 @@ setName.enter(async ctx => {
 	await ctx.reply('Напиши новый никнейм', { disable_notification: true })
 })
 
-setName.on('text', async ctx => {
-	DB.setDisplayName(ctx.message.from.id, ctx.message.text)
+setName.on('text', async (ctx) => {
+	const newName = ctx.message.text
 
-	ctx.reply(`Изменено имя на "${ctx.message.text}"`, {
+	if (newName.length > 20) {
+		await ctx.reply(
+			'во 1) имя должно быть меньше или равно 20 символам вовторых пошел нахуй в третьих 3) нехуй бота ломать уёбок'
+		)
+		return ctx.scene.leave()
+	}
+
+	await ctx.reply(`Изменено имя на "${newName}"`, {
 		disable_notification: true,
 	})
+	DB.setDisplayName(ctx.message.from.id, ctx.message.text)
 
-	ctx.scene.leave()
+	return ctx.scene.leave()
 })
