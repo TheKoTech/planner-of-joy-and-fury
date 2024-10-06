@@ -85,7 +85,7 @@ export default class DB {
 	static updateEventReply(
 		eventId: string,
 		userId: number,
-		replyStatus: EventReplyStatus
+		replyStatus: EventReplyStatus,
 	): boolean {
 		const event = DB.getEvent(eventId)
 

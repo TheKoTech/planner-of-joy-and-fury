@@ -15,10 +15,10 @@ export const plan = new Scenes.BaseScene<Scenes.SceneContext<SceneContext>>(
 		enterHandlers: [],
 		handlers: [],
 		leaveHandlers: [],
-	}
+	},
 )
 
-plan.enter(async (ctx) => {
+plan.enter(async ctx => {
 	const message = `Напиши название`
 
 	await ctx.telegram.sendMessage(ctx.chat!.id, message, {
@@ -26,7 +26,7 @@ plan.enter(async (ctx) => {
 	})
 })
 
-plan.on('text', async (ctx) => {
+plan.on('text', async ctx => {
 	const game = ctx.message.text
 
 	const event: DBEvent = {
@@ -39,7 +39,7 @@ plan.on('text', async (ctx) => {
 	const message = await ctx.telegram.sendMessage(
 		ctx.chat.id,
 		text,
-		eventMessageOptions
+		eventMessageOptions,
 	)
 
 	DB.createEvent(`${message.chat.id}:${message.message_id}`, event)
@@ -49,7 +49,7 @@ plan.on('text', async (ctx) => {
 
 export const handleEventReply = async (
 	ctx: Context,
-	replyStatus: EventReplyStatus
+	replyStatus: EventReplyStatus,
 ) => {
 	if (!('callback_query' in ctx.update)) return
 	if (!ctx.chat) return
@@ -62,7 +62,7 @@ export const handleEventReply = async (
 	const statusChanged = DB.updateEventReply(
 		eventId,
 		ctx.update.callback_query.from.id,
-		replyStatus
+		replyStatus,
 	)
 
 	if (!statusChanged) return
@@ -79,6 +79,6 @@ export const handleEventReply = async (
 		msg.message_id,
 		undefined,
 		text,
-		eventMessageOptions
+		eventMessageOptions,
 	)
 }

@@ -10,5 +10,3 @@ export type DBEvent = {
 type Reply = {
 	status: EventReplyStatus
 }
-
-
