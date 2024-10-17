@@ -11,7 +11,7 @@
 			"skipFiles": ["<node_internals>/**"],
 			"program": "${workspaceFolder}/dist/main.mjs",
 			"outFiles": ["${workspaceFolder}/**/*.js"],
-			"console": "integratedTerminal"
+			"console": "internalConsole"
 		}
 	]
 }
