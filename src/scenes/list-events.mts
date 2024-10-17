@@ -3,7 +3,7 @@ import { SceneList } from '../enums/scene-list.mjs'
 import DB from '../db.mjs'
 import { SceneContext } from '../types/scene-context.mjs'
 import { getEventMessageText } from '../utils/get-event-message-text.mjs'
-import { eventMessageOptions } from '../constants/event-message-options.mjs'
+import { getEventMessageOptions } from '../utils/get-event-message-options.mjs'
 
 const ITEMS_PER_PAGE = 4
 
@@ -33,6 +33,7 @@ listEvents.action(/^display:(.+)$/, async ctx => {
 
 	/** @todo stub */
 	if (!event) return
+	console.log(`Displaying event with id ${eventId}`)
 
 	const text = getEventMessageText(event)
 
@@ -57,14 +58,11 @@ listEvents.action(/^display__pin:(.*)$/, async ctx => {
 
 	await ctx.deleteMessage(callback.message?.message_id)
 	await ctx.scene.leave()
-	const message = await ctx.telegram.sendMessage(
+	await ctx.telegram.sendMessage(
 		callback.message.chat.id,
 		getEventMessageText(event),
-		eventMessageOptions,
+		getEventMessageOptions(eventId),
 	)
-
-	const linkId = `${message.chat.id}:${message.message_id}`
-	DB.createEventLink(eventId, linkId)
 })
 
 listEvents.action(
@@ -106,7 +104,10 @@ async function showPage(ctx: Scenes.SceneContext<SceneContext>) {
 				? Markup.button.callback('➡️', `page:${page + 1}`)
 				: { text: ' ', callback_data: 'noop' },
 			...pageEvents.map(([k, pe]) =>
-				Markup.button.callback(pe.displayName ?? pe.game, `display:${k}`),
+				{
+					console.log(`Listing event with id ${k}`)
+					return Markup.button.callback(pe.displayName ?? pe.game, `display:${k}`)
+				},
 			),
 		],
 		{

@@ -1,11 +1,13 @@
 import { Context, Scenes } from 'telegraf'
-import { eventMessageOptions } from '../constants/event-message-options.mjs'
+import { getEventMessageOptions } from '../utils/get-event-message-options.mjs'
 import { SceneList } from '../enums/scene-list.mjs'
 import DB from '../db.mjs'
 import { DBEvent } from '../types/db-event.mjs'
 import { EventReplyStatus } from '../enums/event-reply-status.mjs'
 import { SceneContext } from '../types/scene-context.mjs'
 import { getEventMessageText } from '../utils/get-event-message-text.mjs'
+import { DBEventReply } from '../types/db-event-reply.mjs'
+import { CallbackQuery, Update } from 'telegraf/types'
 
 export const plan = new Scenes.BaseScene<Scenes.SceneContext<SceneContext>>(
 	SceneList.Plan,
@@ -19,7 +21,12 @@ export const plan = new Scenes.BaseScene<Scenes.SceneContext<SceneContext>>(
 )
 
 plan.enter(async ctx => {
-	const message = `Напиши название`
+	let message = `Напиши название и время, например:\n\n`
+
+	message += `NMS 20:30`
+	message += `Дилдак в 19`
+	message += `Factorio пн 21:10`
+	message += `D&D 20.10 21:10`
 
 	await ctx.telegram.sendMessage(ctx.chat!.id, message, {
 		disable_notification: true,
@@ -28,6 +35,8 @@ plan.enter(async ctx => {
 
 plan.on('text', async ctx => {
 	const game = ctx.message.text
+
+
 
 	const event: DBEvent = {
 		game: game,
@@ -39,7 +48,7 @@ plan.on('text', async ctx => {
 	const message = await ctx.telegram.sendMessage(
 		ctx.chat.id,
 		text,
-		eventMessageOptions,
+		getEventMessageOptions(),
 	)
 
 	DB.createEvent(`${message.chat.id}:${message.message_id}`, event)
@@ -48,8 +57,8 @@ plan.on('text', async ctx => {
 })
 
 export const handleEventReply = async (
-	ctx: Context,
-	replyStatus: EventReplyStatus,
+	ctx: Context<Update.CallbackQueryUpdate<CallbackQuery>>,
+	reply: DBEventReply,
 ) => {
 	if (!('callback_query' in ctx.update)) return
 	if (!ctx.chat) return
@@ -57,12 +66,19 @@ export const handleEventReply = async (
 	const msg = ctx.update.callback_query.message
 	if (!msg) return
 
-	const eventId = `${msg.chat.id}:${msg.message_id}`
+	// @ts-expect-error This should be called with a regex
+	const eventId = ctx.match?.[1]
+
+	if (!eventId) {
+		console.log('Handling event reply: no event id')
+		return
+	}
+	console.log(`Handling reply for event ${eventId}`)
 
 	const statusChanged = DB.updateEventReply(
 		eventId,
 		ctx.update.callback_query.from.id,
-		replyStatus,
+		reply,
 	)
 
 	if (!statusChanged) return
@@ -72,13 +88,12 @@ export const handleEventReply = async (
 	if (!event) return
 
 	const text = getEventMessageText(event)
-	console.log({ text })
 
 	await ctx.telegram.editMessageText(
 		msg.chat.id,
 		msg.message_id,
 		undefined,
 		text,
-		eventMessageOptions,
+		getEventMessageOptions(eventId),
 	)
 }

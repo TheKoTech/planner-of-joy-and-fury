@@ -3,9 +3,9 @@ import { Low } from 'lowdb'
 import { JSONFilePreset } from 'lowdb/node'
 import { dbDefaultData } from './db-default-data.mjs'
 import { DBData } from './types/db-data.mjs'
-import { DBUser } from './types/db-user.mjs'
+import { DBEventReply } from './types/db-event-reply.mjs'
 import { DBEvent } from './types/db-event.mjs'
-import { EventReplyStatus } from './enums/event-reply-status.mjs'
+import { DBUser } from './types/db-user.mjs'
 
 export default class DB {
 	static db: Low<DBData>
@@ -65,17 +65,9 @@ export default class DB {
 		this.db.write()
 	}
 
-	static createEventLink(sourceId: string, targetId: string) {
-		this.db.data.eventLinks[targetId] = sourceId
-		this.db.write()
-	}
-
 	static getEvent(id: string): DBEvent | undefined {
-		let event: DBEvent | undefined = this.db.data.events[id]
-
-		event ??= DB.getEvent(this.db.data.eventLinks[id])
-
-		return event
+		console.log(`Quering event with id ${id}`)
+		return this.db.data.events[id]
 	}
 
 	static getEvents(): DBData['events'] {
@@ -85,25 +77,30 @@ export default class DB {
 	static updateEventReply(
 		eventId: string,
 		userId: number,
-		replyStatus: EventReplyStatus,
+		reply: DBEventReply,
 	): boolean {
 		const event = DB.getEvent(eventId)
 
 		if (!event) {
-			console.log(`event not found: ${eventId}`)
+			console.log(`Skipped updating event reply: event not found ${eventId}`)
+			return false
 		}
 
-		if (!event) return false
-
-		console.log({ reply: event.replies[userId], replyStatus })
-
-		if (event.replies[userId]?.status === replyStatus) return false
+		if (JSON.stringify(event.replies[userId]) === JSON.stringify(reply)) {
+			console.log(
+				`Skipped updating event ${eventId}: Nothing changed`,
+				reply,
+				event.replies[userId],
+			)
+			return false
+		}
 
 		event.replies[userId] = {
 			...event.replies[userId],
-			status: replyStatus,
+			...reply,
 		}
 		this.db.write()
+		console.log(`Updated event reply for id ${eventId}`, reply)
 
 		return true
 	}

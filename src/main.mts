@@ -10,6 +10,7 @@ import { listEvents } from './scenes/list-events.mjs'
 import { SceneContext } from './types/scene-context.mjs'
 import { BotContext } from './types/bot-context.mjs'
 import { EventReplyStatus } from './enums/event-reply-status.mjs'
+import { pickTime } from './scenes/pick-time.mjs'
 
 dotenv.config()
 
@@ -18,6 +19,7 @@ if (!process.env.BOT_TOKEN) throw new Error('No token')
 const stage = new Scenes.Stage<Scenes.SceneContext<SceneContext>>([
 	start,
 	plan,
+	pickTime,
 	settings,
 	setName,
 	listEvents,
@@ -32,14 +34,21 @@ db.init().then(() => {
 	bot.command('start', async ctx => await ctx.scene.enter(SceneList.Start))
 
 	bot.command('plan', async ctx => await ctx.scene.enter(SceneList.Plan))
-	bot.action(/^plan__accept:?/, async ctx => {
-		await handleEventReply(ctx, EventReplyStatus.Accepted)
+	bot.action(/^plan__accept:?(.*)/, async ctx => {
+		await handleEventReply(ctx, { status: EventReplyStatus.Accepted })
 	})
-	bot.action(/^plan__consider:?/, async ctx => {
-		await handleEventReply(ctx, EventReplyStatus.Considering)
+	bot.action(/^plan__consider:?(.*)/, async ctx => {
+		await handleEventReply(ctx, { status: EventReplyStatus.Considering })
 	})
-	bot.action(/^plan__reject:?/, async ctx => {
-		await handleEventReply(ctx, EventReplyStatus.Rejected)
+	bot.action(/^plan__reject:?(.*)/, async ctx => {
+		await handleEventReply(ctx, { status: EventReplyStatus.Rejected })
+	})
+	bot.action(/^plan__pick-time:?(.*)?/, async ctx => {
+		const eventId =
+			ctx.match[1] ?? `${ctx.chat?.id}:${ctx.callbackQuery.message?.message_id}`
+		console.log(`entering pick-time for event ${eventId}`)
+
+		await ctx.scene.enter(SceneList.PickTime, { eventId: eventId })
 	})
 
 	bot.command(
