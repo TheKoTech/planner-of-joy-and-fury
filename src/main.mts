@@ -80,6 +80,9 @@ db.init().then(() => {
 
 	bot.launch().catch(e => {
 		console.error(e)
+
+		console.log({ e })
+
 		return bot.telegram.sendPhoto(
 			-1001964753343,
 			{ source: 'src/assets/i fell.png' },

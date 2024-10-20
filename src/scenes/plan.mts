@@ -8,6 +8,7 @@ import { SceneContext } from '../types/scene-context.mjs'
 import { getEventMessageText } from '../utils/get-event-message-text.mjs'
 import { DBEventReply } from '../types/db-event-reply.mjs'
 import { CallbackQuery, Update } from 'telegraf/types'
+import { gameDateTimeRe } from '../constants/game-date-time-regex.mjs'
 
 export const plan = new Scenes.BaseScene<Scenes.SceneContext<SceneContext>>(
 	SceneList.Plan,
@@ -21,12 +22,12 @@ export const plan = new Scenes.BaseScene<Scenes.SceneContext<SceneContext>>(
 )
 
 plan.enter(async ctx => {
-	let message = `Напиши название и время, например:\n\n`
+	let message = `Напиши название, дату и время, например:\n\n`
 
-	message += `NMS 20:30`
-	message += `Дилдак в 19`
-	message += `Factorio пн 21:10`
-	message += `D&D 20.10 21:10`
+	message += `Название игры Дата Время\n`
+	message += `NMS 20:30\n`
+	message += `Deadlock 21.10 21:10\n`
+	message += `Factorio пн в 21:10`
 
 	await ctx.telegram.sendMessage(ctx.chat!.id, message, {
 		disable_notification: true,
@@ -34,12 +35,89 @@ plan.enter(async ctx => {
 })
 
 plan.on('text', async ctx => {
-	const game = ctx.message.text
+	const messageText = ctx.message.text
 
+	const match = messageText.match(gameDateTimeRe)
 
+	if (!match || !match.groups) {
+		console.warn(`Could not parse message ${messageText}`, match)
+		return
+	}
+
+	// const { game, day_of_week, date, time } = match.groups
+	const game = match.groups?.['name']
+	// const dayOfWeek = match.groups?.['day_of_week']
+	// const date = match.groups?.['date']
+	const time = match.groups?.['time']
+
+	if (game.length > 100) {
+		console.warn(`Game name is too long: "${game}"`)
+		await ctx.reply('Имя игры должно быть короче 100 символов')
+		await ctx.scene.leave()
+		return
+	}
+
+	console.log(`Successfully parsed message "${messageText}"`, match.groups)
+
+	const eventDate = new Date()
+	let hours, minutes
+
+	if (time) {
+		const timeMatch = time.match(/(?<h>\d+):?(?<m>\d+)?/)
+
+		if (timeMatch) {
+			hours = timeMatch.groups?.['h']
+			minutes = timeMatch.groups?.['m']
+		}
+	}
+
+	// let dayNumber: number | undefined
+
+	// if (dayOfWeek) {
+	// 	const days = {
+	// 		0: ['пн', 'пнд', 'понедельник'],
+	// 		1: ['вт', 'втр', 'вторник'],
+	// 		2: ['ср', 'срд', 'среда'],
+	// 		3: ['чт', 'чтг', 'чтв', 'четверг'],
+	// 		4: ['пт', 'птн', 'пятница'],
+	// 		5: ['сб', 'сбт', 'суббота'],
+	// 		6: ['вс', 'вск', 'воскресенье'],
+	// 	}
+
+	// 	dayNumber = Number(
+	// 		Object.entries(days).find(([, val]) => val.includes(dayOfWeek))?.[0] ??
+	// 			-1,
+	// 	)
+	// }
+
+	if (hours) {
+		if (
+			+hours < eventDate.getHours() ||
+			(!minutes && +hours === eventDate.getHours())
+		) {
+			eventDate.setDate(eventDate.getDate() + 1)
+		}
+
+		if (
+			minutes &&
+			+hours === eventDate.getHours() &&
+			+minutes <= eventDate.getMinutes()
+		) {
+			eventDate.setDate(eventDate.getDate() + 1)
+		}
+
+		eventDate.setHours(+hours)
+		eventDate.setMinutes(minutes ? +minutes : 0)
+	}
+
+	// if (dayNumber) {
+	// 	eventDate.setDate(eventDate.getDate() + 7 - (dayNumber - eventDate.getDay()))
+
+	// }
 
 	const event: DBEvent = {
 		game: game,
+		date: eventDate.toString(),
 		replies: { [ctx.message.from.id]: { status: EventReplyStatus.Accepted } },
 	}
 
@@ -66,11 +144,12 @@ export const handleEventReply = async (
 	const msg = ctx.update.callback_query.message
 	if (!msg) return
 
-	// @ts-expect-error This should be called with a regex
-	const eventId = ctx.match?.[1]
+	const eventId =
+		// @ts-expect-error This should be called with a regex
+		ctx.match?.[1] || `${ctx.chat.id}:${ctx.callbackQuery.message?.message_id}`
 
 	if (!eventId) {
-		console.log('Handling event reply: no event id')
+		console.log('Handling event reply: no event id', { eventId })
 		return
 	}
 	console.log(`Handling reply for event ${eventId}`)

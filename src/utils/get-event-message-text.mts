@@ -3,7 +3,33 @@ import DB from '../db.mjs'
 import { DBEvent } from '../types/db-event.mjs'
 
 export function getEventMessageText(event: DBEvent) {
-	let text = `Сбор на ${event.game}\n\n`
+	let text = `Сбор на ${event.game}`
+	let date: Date | undefined
+
+	if (event.date) {
+		date = new Date(event.date)
+		const today = new Date()
+		const dateStr = `${date.getFullYear()}.${date.getMonth()}.${date.getDate()}`
+		const todayStr = `${today.getFullYear()}.${today.getMonth()}.${today.getDate()}`
+
+		text += ', '
+
+		if (dateStr === todayStr) {
+			text += 'сегодня '
+		} else {
+			text += `${date.getDate()}\\.${date.getMonth() + 1} `
+		}
+
+		const time =
+			String(date.getHours()).padStart(2, '0') +
+			':' +
+			String(date.getMinutes()).padStart(2, '0')
+
+		text += `в ${time} МСК`
+	}
+
+	text += '\n\n'
+
 	text += `\`\`\`\n${drawAvailabilityTable(event)}\`\`\`\n`
 	// text += getTags(event)
 
