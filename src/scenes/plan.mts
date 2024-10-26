@@ -12,7 +12,7 @@ import { getEventMessageText } from '../utils/get-event-message-text.mjs'
 
 export const plan = createBaseScene(SceneList.Plan)
 
-plan.enter(async (ctx) => {
+plan.enter(async ctx => {
 	let message = `Напиши название, дату и время, например:\n\n`
 
 	message += `Название игры Дата Время\n`
@@ -25,7 +25,7 @@ plan.enter(async (ctx) => {
 	})
 })
 
-plan.on('text', async (ctx) => {
+plan.on('text', async ctx => {
 	const messageText = ctx.message.text
 
 	const match = messageText.match(gameDateTimeRe)
@@ -117,7 +117,7 @@ plan.on('text', async (ctx) => {
 	const message = await ctx.telegram.sendMessage(
 		ctx.chat.id,
 		text,
-		getEventMessageOptions()
+		getEventMessageOptions(),
 	)
 
 	DB.createEvent(`${message.chat.id}:${message.message_id}`, event)
@@ -127,7 +127,7 @@ plan.on('text', async (ctx) => {
 
 export const handleEventReply = async (
 	ctx: Context<Update.CallbackQueryUpdate<CallbackQuery>>,
-	reply: DBEventReply
+	reply: DBEventReply,
 ) => {
 	if (!('callback_query' in ctx.update)) return
 	if (!ctx.chat) return
@@ -148,7 +148,7 @@ export const handleEventReply = async (
 	const statusChanged = DB.updateEventReply(
 		eventId,
 		ctx.update.callback_query.from.id,
-		reply
+		reply,
 	)
 
 	if (!statusChanged) return
@@ -164,6 +164,6 @@ export const handleEventReply = async (
 		msg.message_id,
 		undefined,
 		text,
-		getEventMessageOptions(eventId)
+		getEventMessageOptions(eventId),
 	)
 }

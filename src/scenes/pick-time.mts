@@ -8,7 +8,7 @@ import { getEventMessageText } from '../utils/get-event-message-text.mjs'
 
 export const pickTime = createBaseScene(SceneList.PickTime)
 
-pickTime.enter(async (ctx) => {
+pickTime.enter(async ctx => {
 	let message = `Во сколько пойдёшь?`
 	message += `\n\nМожешь текстом, например:`
 	message += `\n\nНа 4 часа раньше`
@@ -28,7 +28,7 @@ pickTime.enter(async (ctx) => {
 	})
 })
 
-pickTime.action(/^pick-time__(.+)/, async (ctx) => {
+pickTime.action(/^pick-time__(.+)/, async ctx => {
 	if (!('callback_query' in ctx.update)) return
 	if (!ctx.chat) return
 
@@ -69,6 +69,6 @@ pickTime.action(/^pick-time__(.+)/, async (ctx) => {
 				msgId,
 				text,
 				opts,
-			})
+			}),
 		)
 })

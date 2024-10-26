@@ -10,8 +10,8 @@ import { DBUser } from './types/db-user.mjs'
 export default class DB {
 	static db: Low<DBData>
 
-	static init = async () => {
-		console.log('initializing DB')
+	static async init() {
+		console.log('initializing DB...')
 		DB.db = await JSONFilePreset<DBData>('db.json', dbDefaultData)
 		await DB.db.write()
 		console.log('DB initialized')
@@ -27,23 +27,22 @@ export default class DB {
 			.map(([, v]) => v)
 	}
 
-	/** forgot to include usernames to @tag them. I'm such a fucking idiot */
-	static autofillUsername(user: User): void {
-		const dbUser = this.db.data.users[user.id] ?? this.addUser(user)
-
-		if (!user.username) return
-
-		dbUser.username = user.username
-		this.db.write()
-	}
-
 	static addUser(user: User): DBUser | undefined {
-		if (this.db.data.users[user.id]) throw new Error('User exists')
-		if (!user.username) return
+		console.log('Adding new user')
+
+		if (this.db.data.users[user.id]) {
+			console.error(`User with id ${user.id} already exists`, user)
+			return
+		}
+
+		if (!user.username) {
+			console.error(`User does not have a username`, user)
+			return
+		}
 
 		const newUser: DBUser = {
-			username: user.username!,
-			displayName: user.username ?? user.first_name,
+			username: user.username,
+			displayName: user.username,
 			availability: {},
 			gamesInterested: {},
 			settings: {},
@@ -51,6 +50,8 @@ export default class DB {
 
 		this.db.data.users[user.id] = newUser
 		this.db.write()
+
+		console.log('User added successfully')
 
 		return newUser
 	}
@@ -61,12 +62,13 @@ export default class DB {
 	}
 
 	static createEvent(id: string, event: DBEvent): void {
+		console.log(`Creating event with id ${id}`, event)
 		this.db.data.events[id] = event
 		this.db.write()
 	}
 
 	static getEvent(id: string): DBEvent | undefined {
-		console.log(`Quering event with id ${id}`)
+		console.log(`Querying event with id ${id}`)
 		return this.db.data.events[id]
 	}
 

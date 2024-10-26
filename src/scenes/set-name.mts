@@ -4,7 +4,7 @@ import { SceneList } from '../enums/scene-list.mjs'
 
 export const setName = createBaseScene(SceneList.SetName)
 
-setName.enter(async (ctx) => {
+setName.enter(async ctx => {
 	let from
 	let originalMsg
 
@@ -23,12 +23,12 @@ setName.enter(async (ctx) => {
 	await ctx.reply('Напиши новый никнейм', { disable_notification: true })
 })
 
-setName.on('text', async (ctx) => {
+setName.on('text', async ctx => {
 	const newName = ctx.message.text
 
 	if (newName.length > 20) {
 		await ctx.reply(
-			'во 1) имя должно быть меньше или равно 20 символам вовторых пошел нахуй в третьих 3) нехуй бота ломать уёбок'
+			'во 1) имя должно быть меньше или равно 20 символам вовторых пошел нахуй в третьих 3) нехуй бота ломать уёбок',
 		)
 		return ctx.scene.leave()
 	}

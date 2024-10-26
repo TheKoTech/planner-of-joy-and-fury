@@ -5,15 +5,16 @@ import { SceneList } from '../enums/scene-list.mjs'
 
 export const start = createBaseScene(SceneList.Start)
 
-start.enter(async (ctx) => {
-	if (!('message' in ctx.update)) return
+start.enter(async ctx => {
+	if (!('message' in ctx.update)) return ctx.scene.leave()
 
 	const author = ctx.update.message.from
 	const user = DB.getUser(author.id) ?? DB.addUser(author)
 
-	if (!user) return await ctx.scene.leave()
+	if (!user) return ctx.scene.leave()
 
 	const message = `Привет, ${user?.displayName}\n\n`
+
 	// @todo availability
 	// if (user.availability) message += `Сегодня ${user.availability}\n\n`
 	// @todo daily events
@@ -35,6 +36,6 @@ start.enter(async (ctx) => {
 	})
 })
 
-start.action('plan-game', async (ctx) => {
+start.action('plan-game', async ctx => {
 	ctx.scene.enter('c_plan')
 })

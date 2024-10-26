@@ -4,7 +4,7 @@ import { SceneList } from '../enums/scene-list.mjs'
 
 export const settings = createBaseScene(SceneList.Settings)
 
-settings.enter(async (ctx) => {
+settings.enter(async ctx => {
 	if (!('message' in ctx.update)) return
 
 	await ctx.reply('Настройки', {
@@ -18,6 +18,6 @@ settings.enter(async (ctx) => {
 	})
 })
 
-settings.action('settings__set-username', async (ctx) =>
-	ctx.scene.enter(SceneList.SetName)
+settings.action('settings__set-username', async ctx =>
+	ctx.scene.enter(SceneList.SetName),
 )

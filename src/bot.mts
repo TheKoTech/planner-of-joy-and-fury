@@ -9,14 +9,17 @@ import { BotContext } from './types/bot-context.mjs'
 
 dotenv.config()
 
-if (!process.env.BOT_TOKEN) throw new Error('No token')
-
 export default class Bot {
 	static instance: Telegraf<BotContext>
 	private static initialized = false
 
 	static async init() {
-		if (Bot.initialized) return
+		if (Bot.initialized) throw new Error('Bot must be a singleton')
+		if (!process.env.BOT_TOKEN) throw new Error('No token')
+
+		await DB.init()
+
+		console.log('Initializing bot...')
 
 		Bot.initialized = true
 
@@ -27,13 +30,13 @@ export default class Bot {
 		Bot.registerCommands()
 		Bot.registerActions()
 
-		await DB.init()
-		await Bot.instance.launch()
-		console.log('Bot launched')
-
 		// Enable graceful stop
 		process.once('SIGINT', () => Bot.instance.stop('SIGINT'))
 		process.once('SIGTERM', () => Bot.instance.stop('SIGTERM'))
+
+		console.log('Bot initialized')
+
+		return Bot.instance.launch()
 	}
 
 	private static registerActions() {
@@ -46,12 +49,12 @@ export default class Bot {
 		} as const
 
 		Object.entries(actionHandlers).forEach(([action, status]) => {
-			bot.action(`plan__${action}:?(.*)`, async (ctx) => {
+			bot.action(`plan__${action}:?(.*)`, async ctx => {
 				await handleEventReply(ctx, { status })
 			})
 		})
 
-		bot.action(/^plan__pick-time:?(.*)?/, async (ctx) => {
+		bot.action(/^plan__pick-time:?(.*)?/, async ctx => {
 			const eventId =
 				ctx.match[1] ??
 				`${ctx.chat?.id}:${ctx.callbackQuery.message?.message_id}`
@@ -63,19 +66,19 @@ export default class Bot {
 	private static registerCommands() {
 		const bot = Bot.instance
 
-		bot.command('start', async (ctx) => await ctx.scene.enter(SceneList.Start))
-		bot.command('plan', async (ctx) => await ctx.scene.enter(SceneList.Plan))
+		bot.command('start', async ctx => await ctx.scene.enter(SceneList.Start))
+		bot.command('plan', async ctx => await ctx.scene.enter(SceneList.Plan))
 		bot.command(
 			'settings',
-			async (ctx) => await ctx.scene.enter(SceneList.Settings)
+			async ctx => await ctx.scene.enter(SceneList.Settings),
 		)
 		bot.command(
 			'setname',
-			async (ctx) => await ctx.scene.enter(SceneList.SetName)
+			async ctx => await ctx.scene.enter(SceneList.SetName),
 		)
 		bot.command(
 			'listevents',
-			async (ctx) => await ctx.scene.enter(SceneList.ListEvents)
+			async ctx => await ctx.scene.enter(SceneList.ListEvents),
 		)
 
 		// bot.command(
