@@ -1,4 +1,4 @@
-import { createBaseScene } from '../create-base-scene.mjs'
+import { createBaseScene } from '../utils/create-base-scene.mjs'
 import DB from '../db.mjs'
 import { SceneList } from '../enums/scene-list.mjs'
 

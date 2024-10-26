@@ -1,5 +1,5 @@
 import { Markup } from 'telegraf'
-import { createBaseScene } from '../create-base-scene.mjs'
+import { createBaseScene } from '../utils/create-base-scene.mjs'
 import DB from '../db.mjs'
 import { SceneList } from '../enums/scene-list.mjs'
 
@@ -9,7 +9,7 @@ start.enter(async ctx => {
 	if (!('message' in ctx.update)) return ctx.scene.leave()
 
 	const author = ctx.update.message.from
-	const user = DB.getUser(author.id) ?? DB.addUser(author)
+	const user = DB.getUser(author.id)
 
 	if (!user) return ctx.scene.leave()
 

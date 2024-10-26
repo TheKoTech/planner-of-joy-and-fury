@@ -14,7 +14,7 @@ export const getEventMessageOptions = (eventId?: string) => ({
 			].map(([text, callbackQueryId]) => [
 				Markup.button.callback(
 					text,
-					eventId ? `${callbackQueryId}:${eventId}` : callbackQueryId
+					eventId ? `${callbackQueryId}:${eventId}` : callbackQueryId,
 				),
 			]),
 		],

@@ -5,4 +5,6 @@ export const enum SceneList {
 	Settings = 'c_settings',
 	SetName = 'c_set-name',
 	ListEvents = 'c_list-events',
+	Ban = 'c_ban',
+	Invite = 'c_invite',
 }

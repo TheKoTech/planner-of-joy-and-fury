@@ -4,7 +4,7 @@ import DB from '../db.mjs'
 import { SceneContext } from '../types/scene-context.mjs'
 import { getEventMessageText } from '../utils/get-event-message-text.mjs'
 import { getEventMessageOptions } from '../utils/get-event-message-options.mjs'
-import { createBaseScene } from '../create-base-scene.mjs'
+import { createBaseScene } from '../utils/create-base-scene.mjs'
 
 const ITEMS_PER_PAGE = 4
 

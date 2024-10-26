@@ -68,7 +68,7 @@ export class Parser {
 	}
 	static parseTimeString(
 		timeString: string | undefined,
-		eventDate: moment.Moment
+		eventDate: moment.Moment,
 	): moment.Moment {
 		if (!timeString) {
 			return eventDate.set({ hour: 20, minute: 0, second: 0, millisecond: 0 })
@@ -91,7 +91,7 @@ export class Parser {
 	static parseDateString(
 		dateString: string,
 		eventDate: moment.Moment,
-		now: moment.Moment
+		now: moment.Moment,
 	): moment.Moment {
 		console.log('Parsing date')
 		const dateFormats = ['D.M.Y', 'D.M', 'M', 'MMMM', 'MMM']
@@ -109,7 +109,7 @@ export class Parser {
 	static adjustYearAndCombineTime(
 		parsedDate: moment.Moment,
 		eventDate: moment.Moment,
-		now: moment.Moment
+		now: moment.Moment,
 	): moment.Moment {
 		if (!parsedDate.year()) {
 			if (
@@ -132,7 +132,7 @@ export class Parser {
 	static parseDayOfWeek(
 		dayOfWeek: string,
 		eventDate: moment.Moment,
-		now: moment.Moment
+		now: moment.Moment,
 	): moment.Moment {
 		console.log('Parsing day of week')
 

@@ -1,4 +1,4 @@
-import { createBaseScene } from '../create-base-scene.mjs'
+import { createBaseScene } from '../utils/create-base-scene.mjs'
 import DB from '../db.mjs'
 import { EventReplyStatus } from '../enums/event-reply-status.mjs'
 import { SceneList } from '../enums/scene-list.mjs'
@@ -8,7 +8,7 @@ import { Parser } from '../utils/parser.mjs'
 
 export const plan = createBaseScene(SceneList.Plan)
 
-plan.enter(async (ctx) => {
+plan.enter(async ctx => {
 	let message = `Напиши название, дату и время, например:\n\n`
 
 	message += `Название игры Дата Время\n`
@@ -21,7 +21,7 @@ plan.enter(async (ctx) => {
 	})
 })
 
-plan.on('text', async (ctx) => {
+plan.on('text', async ctx => {
 	const messageText = ctx.message.text
 	let event
 	try {

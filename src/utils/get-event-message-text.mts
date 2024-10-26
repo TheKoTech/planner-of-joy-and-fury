@@ -64,9 +64,9 @@ function drawAvailabilityTable(event: DBEvent): string {
 	return rowData.reduce(
 		(acc, [user, statusEmoji, statusText]) =>
 			(acc += `| ${user.padEnd(
-				columnWidths[0]
+				columnWidths[0],
 			)} | ${statusEmoji} ${statusText.padEnd(columnWidths[1], ' ')} |\n`),
-		''
+		'',
 	)
 }
 

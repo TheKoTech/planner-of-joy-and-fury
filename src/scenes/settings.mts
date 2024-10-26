@@ -1,5 +1,5 @@
 import { Markup } from 'telegraf'
-import { createBaseScene } from '../create-base-scene.mjs'
+import { createBaseScene } from '../utils/create-base-scene.mjs'
 import { SceneList } from '../enums/scene-list.mjs'
 
 export const settings = createBaseScene(SceneList.Settings)

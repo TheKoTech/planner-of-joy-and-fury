@@ -32,10 +32,6 @@ export const handleEventReply = async (
 	const eventId =
 		ctx.match[1] || `${ctx.chat.id}:${ctx.callbackQuery.message?.message_id}`
 
-	if (!eventId) {
-		console.warn('Handling event reply: no event id', { eventId })
-		return
-	}
 	console.log(`Handling reply for event ${eventId}`)
 
 	const statusChanged = DB.updateEventReply(
