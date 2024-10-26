@@ -1,27 +1,18 @@
-import { Context, Scenes } from 'telegraf'
-import { getEventMessageOptions } from '../utils/get-event-message-options.mjs'
-import { SceneList } from '../enums/scene-list.mjs'
-import DB from '../db.mjs'
-import { DBEvent } from '../types/db-event.mjs'
-import { EventReplyStatus } from '../enums/event-reply-status.mjs'
-import { SceneContext } from '../types/scene-context.mjs'
-import { getEventMessageText } from '../utils/get-event-message-text.mjs'
-import { DBEventReply } from '../types/db-event-reply.mjs'
+import { Context } from 'telegraf'
 import { CallbackQuery, Update } from 'telegraf/types'
 import { gameDateTimeRe } from '../constants/game-date-time-regex.mjs'
+import { createBaseScene } from '../create-base-scene.mjs'
+import DB from '../db.mjs'
+import { EventReplyStatus } from '../enums/event-reply-status.mjs'
+import { SceneList } from '../enums/scene-list.mjs'
+import { DBEventReply } from '../types/db-event-reply.mjs'
+import { DBEvent } from '../types/db-event.mjs'
+import { getEventMessageOptions } from '../utils/get-event-message-options.mjs'
+import { getEventMessageText } from '../utils/get-event-message-text.mjs'
 
-export const plan = new Scenes.BaseScene<Scenes.SceneContext<SceneContext>>(
-	SceneList.Plan,
-	{
-		ttl: 7200,
-		/* these are here just because they're required */
-		enterHandlers: [],
-		handlers: [],
-		leaveHandlers: [],
-	},
-)
+export const plan = createBaseScene(SceneList.Plan)
 
-plan.enter(async ctx => {
+plan.enter(async (ctx) => {
 	let message = `Напиши название, дату и время, например:\n\n`
 
 	message += `Название игры Дата Время\n`
@@ -34,7 +25,7 @@ plan.enter(async ctx => {
 	})
 })
 
-plan.on('text', async ctx => {
+plan.on('text', async (ctx) => {
 	const messageText = ctx.message.text
 
 	const match = messageText.match(gameDateTimeRe)
@@ -126,7 +117,7 @@ plan.on('text', async ctx => {
 	const message = await ctx.telegram.sendMessage(
 		ctx.chat.id,
 		text,
-		getEventMessageOptions(),
+		getEventMessageOptions()
 	)
 
 	DB.createEvent(`${message.chat.id}:${message.message_id}`, event)
@@ -136,7 +127,7 @@ plan.on('text', async ctx => {
 
 export const handleEventReply = async (
 	ctx: Context<Update.CallbackQueryUpdate<CallbackQuery>>,
-	reply: DBEventReply,
+	reply: DBEventReply
 ) => {
 	if (!('callback_query' in ctx.update)) return
 	if (!ctx.chat) return
@@ -157,7 +148,7 @@ export const handleEventReply = async (
 	const statusChanged = DB.updateEventReply(
 		eventId,
 		ctx.update.callback_query.from.id,
-		reply,
+		reply
 	)
 
 	if (!statusChanged) return
@@ -173,6 +164,6 @@ export const handleEventReply = async (
 		msg.message_id,
 		undefined,
 		text,
-		getEventMessageOptions(eventId),
+		getEventMessageOptions(eventId)
 	)
 }

@@ -1,97 +1,16 @@
-import dotenv from 'dotenv'
-import { Scenes, session, Telegraf } from 'telegraf'
-import DB from './db.mjs'
-import { plan, handleEventReply } from './scenes/plan.mjs'
-import { SceneList } from './enums/scene-list.mjs'
-import { setName } from './scenes/set-name.mjs'
-import { settings } from './scenes/settings.mjs'
-import { start } from './scenes/start.mjs'
-import { listEvents } from './scenes/list-events.mjs'
-import { SceneContext } from './types/scene-context.mjs'
-import { BotContext } from './types/bot-context.mjs'
-import { EventReplyStatus } from './enums/event-reply-status.mjs'
-import { pickTime } from './scenes/pick-time.mjs'
+import Bot from './bot.mjs'
 
-dotenv.config()
-
-if (!process.env.BOT_TOKEN) throw new Error('No token')
-
-const stage = new Scenes.Stage<Scenes.SceneContext<SceneContext>>([
-	start,
-	plan,
-	pickTime,
-	settings,
-	setName,
-	listEvents,
-])
-
-const bot = new Telegraf<BotContext>(process.env.BOT_TOKEN)
-const db = new DB()
-
-db.init().then(() => {
-	bot.use(session())
-	bot.use(stage.middleware())
-	bot.command('start', async ctx => await ctx.scene.enter(SceneList.Start))
-
-	bot.command('plan', async ctx => await ctx.scene.enter(SceneList.Plan))
-	bot.action(/^plan__accept:?(.*)/, async ctx => {
-		await handleEventReply(ctx, { status: EventReplyStatus.Accepted })
+Bot.init()
+	.then(() => {
+		console.log('Bot initialization complete')
 	})
-	bot.action(/^plan__consider:?(.*)/, async ctx => {
-		await handleEventReply(ctx, { status: EventReplyStatus.Considering })
-	})
-	bot.action(/^plan__reject:?(.*)/, async ctx => {
-		await handleEventReply(ctx, { status: EventReplyStatus.Rejected })
-	})
-	bot.action(/^plan__pick-time:?(.*)?/, async ctx => {
-		const eventId =
-			ctx.match[1] ?? `${ctx.chat?.id}:${ctx.callbackQuery.message?.message_id}`
-		console.log(`entering pick-time for event ${eventId}`)
+	.catch((e) => {
+		console.error('Error initializing bot:', e)
 
-		await ctx.scene.enter(SceneList.PickTime, { eventId: eventId })
-	})
-
-	bot.command(
-		'settings',
-		async ctx => await ctx.scene.enter(SceneList.Settings),
-	)
-
-	bot.command('setname', async ctx => await ctx.scene.enter(SceneList.SetName))
-
-	bot.command(
-		'listevents',
-		async ctx => await ctx.scene.enter(SceneList.ListEvents),
-	)
-
-	// bot.command(
-	// 	'crash',
-	// 	async () =>
-	// 		await bot.telegram.sendPhoto(
-	// 			-1001964753343,
-	// 			{
-	// 				source: 'src/assets/i fell.png',
-	// 			},
-	// 			{ disable_notification: true },
-	// 		).then(async () => bot.stop('SIGINT')),
-	// )
-
-	/** @todo delete when DB is filled */
-	bot.on('message', async ctx => DB.autofillUsername(ctx.message.from))
-
-	bot.launch().catch(e => {
-		console.error(e)
-
-		console.log({ e })
-
-		return bot.telegram.sendPhoto(
+		// Error handling: send a photo to a error channel (kept from your original code)
+		Bot.getInstance.telegram.sendPhoto(
 			-1001964753343,
 			{ source: 'src/assets/i fell.png' },
-			{ disable_notification: true },
+			{ disable_notification: true }
 		)
 	})
-	console.log('Bot launched')
-
-	// Enable graceful stop
-	process.once('SIGINT', () => bot.stop('SIGINT'))
-	process.once('SIGTERM', () => bot.stop('SIGTERM'))
-})

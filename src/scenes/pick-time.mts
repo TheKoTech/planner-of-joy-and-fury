@@ -1,23 +1,14 @@
-import { Markup, Scenes } from 'telegraf'
-import { SceneList } from '../enums/scene-list.mjs'
-import { SceneContext } from '../types/scene-context.mjs'
+import { Markup } from 'telegraf'
+import { createBaseScene } from '../create-base-scene.mjs'
 import DB from '../db.mjs'
 import { EventReplyStatus } from '../enums/event-reply-status.mjs'
-import { getEventMessageText } from '../utils/get-event-message-text.mjs'
+import { SceneList } from '../enums/scene-list.mjs'
 import { getEventMessageOptions } from '../utils/get-event-message-options.mjs'
+import { getEventMessageText } from '../utils/get-event-message-text.mjs'
 
-export const pickTime = new Scenes.BaseScene<Scenes.SceneContext<SceneContext>>(
-	SceneList.PickTime,
-	{
-		ttl: 7200,
-		/* these are here just because they're required */
-		enterHandlers: [],
-		handlers: [],
-		leaveHandlers: [],
-	},
-)
+export const pickTime = createBaseScene(SceneList.PickTime)
 
-pickTime.enter(async ctx => {
+pickTime.enter(async (ctx) => {
 	let message = `Во сколько пойдёшь?`
 	message += `\n\nМожешь текстом, например:`
 	message += `\n\nНа 4 часа раньше`
@@ -37,7 +28,7 @@ pickTime.enter(async ctx => {
 	})
 })
 
-pickTime.action(/^pick-time__(.+)/, async ctx => {
+pickTime.action(/^pick-time__(.+)/, async (ctx) => {
 	if (!('callback_query' in ctx.update)) return
 	if (!ctx.chat) return
 
@@ -72,5 +63,12 @@ pickTime.action(/^pick-time__(.+)/, async ctx => {
 	const opts = getEventMessageOptions(eventId)
 	await ctx.telegram
 		.editMessageText(+chatId, +msgId, undefined, text, opts)
-		.catch(() => console.warn(`Failed to update message text`, { chatId, msgId, text, opts }))
+		.catch(() =>
+			console.warn(`Failed to update message text`, {
+				chatId,
+				msgId,
+				text,
+				opts,
+			})
+		)
 })

@@ -1,19 +1,10 @@
-import { Markup, Scenes } from 'telegraf'
+import { Markup } from 'telegraf'
+import { createBaseScene } from '../create-base-scene.mjs'
 import { SceneList } from '../enums/scene-list.mjs'
-import { SceneContext } from '../types/scene-context.mjs'
 
-export const settings = new Scenes.BaseScene<Scenes.SceneContext<SceneContext>>(
-	SceneList.Settings,
-	{
-		ttl: 7200,
-		/* these are here just because they're required */
-		enterHandlers: [],
-		handlers: [],
-		leaveHandlers: [],
-	},
-)
+export const settings = createBaseScene(SceneList.Settings)
 
-settings.enter(async ctx => {
+settings.enter(async (ctx) => {
 	if (!('message' in ctx.update)) return
 
 	await ctx.reply('Настройки', {
@@ -27,6 +18,6 @@ settings.enter(async ctx => {
 	})
 })
 
-settings.action('settings__set-username', async ctx =>
-	ctx.scene.enter(SceneList.SetName),
+settings.action('settings__set-username', async (ctx) =>
+	ctx.scene.enter(SceneList.SetName)
 )

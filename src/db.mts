@@ -10,7 +10,7 @@ import { DBUser } from './types/db-user.mjs'
 export default class DB {
 	static db: Low<DBData>
 
-	init = async () => {
+	static init = async () => {
 		console.log('initializing DB')
 		DB.db = await JSONFilePreset<DBData>('db.json', dbDefaultData)
 		await DB.db.write()

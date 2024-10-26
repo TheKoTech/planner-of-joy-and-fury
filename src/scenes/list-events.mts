@@ -4,30 +4,23 @@ import DB from '../db.mjs'
 import { SceneContext } from '../types/scene-context.mjs'
 import { getEventMessageText } from '../utils/get-event-message-text.mjs'
 import { getEventMessageOptions } from '../utils/get-event-message-options.mjs'
+import { createBaseScene } from '../create-base-scene.mjs'
 
 const ITEMS_PER_PAGE = 4
 
-export const listEvents = new Scenes.BaseScene<
-	Scenes.SceneContext<SceneContext>
->(SceneList.ListEvents, {
-	ttl: 7200,
-	/* these are here just because they're required */
-	enterHandlers: [],
-	handlers: [],
-	leaveHandlers: [],
-})
+export const listEvents = createBaseScene(SceneList.ListEvents)
 
-listEvents.enter(async ctx => {
+listEvents.enter(async (ctx) => {
 	ctx.scene.session.page = 0
 	await showPage(ctx)
 })
 
-listEvents.action(/^page:(.+)$/, async ctx => {
+listEvents.action(/^page:(.+)$/, async (ctx) => {
 	ctx.scene.session.page = parseInt(ctx.match[1])
 	await showPage(ctx)
 })
 
-listEvents.action(/^display:(.+)$/, async ctx => {
+listEvents.action(/^display:(.+)$/, async (ctx) => {
 	const eventId = ctx.match[1]
 	const event = DB.getEvent(eventId)
 
@@ -47,8 +40,8 @@ listEvents.action(/^display:(.+)$/, async ctx => {
 	})
 })
 
-listEvents.action('display__back', async ctx => await showPage(ctx))
-listEvents.action(/^display__pin:(.*)$/, async ctx => {
+listEvents.action('display__back', async (ctx) => await showPage(ctx))
+listEvents.action(/^display__pin:(.*)$/, async (ctx) => {
 	const callback = ctx.update.callback_query
 	const eventId = ctx.match[1]
 	const event = DB.getEvent(eventId)
@@ -61,16 +54,16 @@ listEvents.action(/^display__pin:(.*)$/, async ctx => {
 	await ctx.telegram.sendMessage(
 		callback.message.chat.id,
 		getEventMessageText(event),
-		getEventMessageOptions(eventId),
+		getEventMessageOptions(eventId)
 	)
 })
 
 listEvents.action(
 	'display__refresh',
-	async ctx => await ctx.answerCbQuery('refresh'),
+	async (ctx) => await ctx.answerCbQuery('refresh')
 )
 
-listEvents.action(/^display:(.*)$/, async ctx => console.log(ctx.update))
+listEvents.action(/^display:(.*)$/, async (ctx) => console.log(ctx.update))
 
 async function showPage(ctx: Scenes.SceneContext<SceneContext>) {
 	let originalMsg
@@ -98,24 +91,22 @@ async function showPage(ctx: Scenes.SceneContext<SceneContext>) {
 				: { text: ' ', callback_data: 'noop' },
 			Markup.button.callback(
 				`${page + 1}/${Math.ceil(events.length / ITEMS_PER_PAGE)}`,
-				'noop',
+				'noop'
 			),
 			page < Math.floor(events.length / ITEMS_PER_PAGE)
 				? Markup.button.callback('➡️', `page:${page + 1}`)
 				: { text: ' ', callback_data: 'noop' },
-			...pageEvents.map(([k, pe]) =>
-				{
-					console.log(`Listing event with id ${k}`)
-					return Markup.button.callback(pe.displayName ?? pe.game, `display:${k}`)
-				},
-			),
+			...pageEvents.map(([k, pe]) => {
+				console.log(`Listing event with id ${k}`)
+				return Markup.button.callback(pe.displayName ?? pe.game, `display:${k}`)
+			}),
 		],
 		{
 			columns: 3,
 			wrap(_, index) {
 				return index >= 3
 			},
-		},
+		}
 	)
 
 	if (originalMsg) {
