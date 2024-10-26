@@ -81,7 +81,7 @@ async function showPage(ctx: Scenes.SceneContext<SceneContext>) {
 	const isEmpty = !pageEvents.length
 
 	const text = pageEvents
-		.map(([, e]) => `${e.displayName ?? e.game}`)
+		.map(([, e]) => `${e.displayName ?? e.name}`)
 		.join('\n\n')
 
 	const keyboard = Markup.inlineKeyboard(
@@ -98,7 +98,7 @@ async function showPage(ctx: Scenes.SceneContext<SceneContext>) {
 				: { text: ' ', callback_data: 'noop' },
 			...pageEvents.map(([k, pe]) => {
 				console.log(`Listing event with id ${k}`)
-				return Markup.button.callback(pe.displayName ?? pe.game, `display:${k}`)
+				return Markup.button.callback(pe.displayName ?? pe.name, `display:${k}`)
 			}),
 		],
 		{

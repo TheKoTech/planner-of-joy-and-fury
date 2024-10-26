@@ -1,31 +1,27 @@
 import { getReplyStatusText } from './get-reply-status-text.mjs'
 import DB from '../db.mjs'
 import { DBEvent } from '../types/db-event.mjs'
+import moment from 'moment'
 
 export function getEventMessageText(event: DBEvent) {
-	let text = `Сбор на ${event.game}`
-	let date: Date | undefined
+	let text = `Сбор на ${event.name}`
+	let date: moment.Moment | undefined
 
 	if (event.date) {
-		date = new Date(event.date)
-		const today = new Date()
-		const dateStr = `${date.getFullYear()}.${date.getMonth()}.${date.getDate()}`
-		const todayStr = `${today.getFullYear()}.${today.getMonth()}.${today.getDate()}`
+		date = moment(event.date).utcOffset(3)
+		const today = moment()
+		const dateStr = date.format('YYYY.M.D')
+		const todayStr = today.format('YYYY.M.D')
 
 		text += ', '
 
 		if (dateStr === todayStr) {
 			text += 'сегодня '
 		} else {
-			text += `${date.getDate()}\\.${date.getMonth() + 1} `
+			text += `${date.date()}\\.${date.month() + 1} `
 		}
 
-		const time =
-			String(date.getHours()).padStart(2, '0') +
-			':' +
-			String(date.getMinutes()).padStart(2, '0')
-
-		text += `в ${time} МСК`
+		text += `в ${date.format('HH:mm')} МСК`
 	}
 
 	text += '\n\n'
@@ -68,9 +64,9 @@ function drawAvailabilityTable(event: DBEvent): string {
 	return rowData.reduce(
 		(acc, [user, statusEmoji, statusText]) =>
 			(acc += `| ${user.padEnd(
-				columnWidths[0],
+				columnWidths[0]
 			)} | ${statusEmoji} ${statusText.padEnd(columnWidths[1], ' ')} |\n`),
-		'',
+		''
 	)
 }
 

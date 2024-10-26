@@ -1,8 +1,8 @@
 /**
- * Regular expression for parsing game date and time information
+ * Regular expression for parsing event date and time information
  *
  * @example
- * const match = "Шахматы завтра в 15:00".match(gameDateTimeRe);
+ * const match = "Шахматы завтра в 15:00".match(eventDateTimeRe);
  * if (match) {
  *   const { name, day_of_week, date, time } = match.groups;
  *   console.log(name); // "Шахматы"
@@ -12,15 +12,15 @@
  *
  * @description
  * Parsed groups:
- * - name: The name of the event or game (optional)
+ * - name: The name of the event (optional)
  * - day_of_week: The day of the week in (optional)
  * - date: The date in various formats (optional)
  * - time: The time of the event (optional)
  *
  * day_of_week and date are mutually exclusive.
  */
-export const gameDateTimeRe =
-	/^(?<name>.*?)(?:\s+(?:(?<day_of_week>пнд?|втр?|срд?|чт(?:в|г)?|птн?|сбт?|вск?|понедельник|вторник|среда|четверг|пятница|суббота|воскресенье)|(?<date>(?:\d{1,2}[-./]\d{1,2}(?:[-./]\d{2,4})?|\d{1,2}\s+(?:января|февраля|марта|апреля|мая|июня|июля|августа|сентября|октября|ноября|декабря|янв|фев|мар|апр|мая|июн|июл|авг|сен|окт|ноя|дек)(?:\s+\d{2,4})?|сегодня|завтра)))?\s*(?<time>(?:в\s+)?(?:\d{1,2}(?::\d{2})?|(?:\d{1,2}\s+)?(?:утра|дня|вечера|ночи|час(?:ов|а)?)))?\s*)?$/i
+export const eventDateTimeRe =
+	/^(?<name>.*?)(?:\s+(?:(?<day_of_week>пнд?|втр?|срд?|чт(?:в|г)?|птн?|сбт?|вск?|понедельник|вторник|среда|четверг|пятница|суббота|воскресенье|(?:после)?завтра|сегодня)|(?<date>(?:\d{1,2}[-./]\d{1,2}(?:[-./]\d{2,4})?|\d{1,2}\s+(?:января|февраля|марта|апреля|мая|июня|июля|августа|сентября|октября|ноября|декабря|янв|фев|мар|апр|мая|июн|июл|авг|сен|окт|ноя|дек)(?:\s+\d{2,4})?)))?\s*(?<time>(?:в\s+)?(?:\d{1,2}(?::\d{2})?|(?:\d{1,2}\s+)?(?:утра|дня|вечера|ночи|час(?:ов|а)?)))?\s*)?$/i
 
 /*
 test string (add gm flags in regex101)
