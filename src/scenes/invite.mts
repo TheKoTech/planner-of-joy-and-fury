@@ -21,7 +21,7 @@ async function inviteUser(ctx: BotContext, username: string) {
 
 export const invite = createBaseScene(SceneList.Invite)
 
-invite.enter(async (ctx) => {
+invite.enter(async ctx => {
 	const state = ctx.scene.state as Record<string, unknown>
 	const username = state.username as string | undefined
 
@@ -34,14 +34,14 @@ invite.enter(async (ctx) => {
 			'Кого?',
 			Markup.inlineKeyboard([
 				[Markup.button.callback('Отмена', 'invite__cancel')],
-			])
+			]),
 		)
 	}
 })
 
-invite.action('invite__cancel', async (ctx) => ctx.scene.leave())
+invite.action('invite__cancel', async ctx => ctx.scene.leave())
 
-invite.hears(/.+/, async (ctx) => {
+invite.hears(/.+/, async ctx => {
 	const text = ctx.message.text
 	const username = text.match(/@?([a-z_-\d])$/i)?.[1]
 

@@ -25,17 +25,16 @@ start.enter(async ctx => {
 		reply_markup: {
 			resize_keyboard: true,
 			inline_keyboard: [
-				[Markup.button.callback('Объявить сбор', 'plan-game')],
-				// [{ text: 'Объявить сбор', callback_data: 'plan' }],
-				// [{ text: 'Занятость', callback_data: 'availability' }],
-				// [{ text: 'Мои игры', callback_data: 'games' }],
-				// [{ text: '', callback_data: 'games' }],
-				// [{ text: 'Настройки', callback_data: 'settings' }],
+				[Markup.button.callback('Объявить сбор', 'start__plan-game')],
+				[Markup.button.callback('Поменять ник', 'start__set-name')],
+				[Markup.button.callback('Пригласить', 'start__invite')],
 			],
 		},
 	})
 })
 
-start.action('plan-game', async ctx => {
-	ctx.scene.enter('c_plan')
-})
+start.action('start__plan-game', async ctx => ctx.scene.enter(SceneList.Plan))
+
+start.action('start__set-name', async ctx => ctx.scene.enter(SceneList.SetName))
+
+start.action('start__invite', async ctx => ctx.scene.enter(SceneList.Invite))

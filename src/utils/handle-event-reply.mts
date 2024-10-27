@@ -7,7 +7,7 @@ import { getEventMessageText } from './get-event-message-text.mjs'
 
 export const handleEventReply = async (
 	ctx: Context<Update.CallbackQueryUpdate<CallbackQuery>>,
-	reply: DBEventReply
+	reply: DBEventReply,
 ) => {
 	console.log(`Handling event reply ${reply.status}`)
 	if (!('callback_query' in ctx.update)) {
@@ -37,7 +37,7 @@ export const handleEventReply = async (
 	const statusChanged = DB.updateEventReply(
 		eventId,
 		ctx.update.callback_query.from.id,
-		reply
+		reply,
 	)
 
 	if (!statusChanged) return
@@ -53,6 +53,6 @@ export const handleEventReply = async (
 		msg.message_id,
 		undefined,
 		text,
-		getEventMessageOptions(eventId)
+		getEventMessageOptions(eventId),
 	)
 }

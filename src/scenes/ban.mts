@@ -5,7 +5,7 @@ import { SceneList } from '../enums/scene-list.mjs'
 
 export const ban = createBaseScene(SceneList.Ban)
 
-ban.enter(async (ctx) => {
+ban.enter(async ctx => {
 	console.log('Ban incoming')
 	if (!ctx.message) return
 
@@ -39,7 +39,7 @@ ban.enter(async (ctx) => {
 	return ctx.scene.leave()
 })
 
-ban.hears(/.*/, async (ctx) => {
+ban.hears(/.*/, async ctx => {
 	const text = ctx.message.text
 	const username = text.match(/^@?(.*)$/)?.[1]
 
@@ -65,7 +65,7 @@ function banUser(ctx: Context, targetId: number) {
 			...Markup.inlineKeyboard([
 				Markup.button.callback(
 					'Извините, я нечаянно',
-					`ban__revert:${targetId}`
+					`ban__revert:${targetId}`,
 				),
 			]),
 		})

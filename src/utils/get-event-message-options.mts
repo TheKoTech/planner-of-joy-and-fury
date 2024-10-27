@@ -10,7 +10,8 @@ export const getEventMessageOptions = (eventId?: string) => ({
 				['✅ Пойду', `plan__accept`],
 				['🤔 50 на 50', `plan__consider`],
 				['❌ Откажусь', `plan__reject`],
-				['🕑 Выбрать время', `plan__pick-time`],
+				// ['🕑 Выбрать время', `plan__pick-time`],
+				['🗑 Удалить', 'plan__delete'],
 			].map(([text, callbackQueryId]) => [
 				Markup.button.callback(
 					text,

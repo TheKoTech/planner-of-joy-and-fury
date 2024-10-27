@@ -20,9 +20,10 @@ const createRoleMiddleware = (requiredRole: UserRole, errorMessage: string) => {
 			if (!user || user.role < requiredRole) {
 				if (!isSilent) {
 					await ctx.reply(errorMessage, {
-						parse_mode:
-							'MarkdownV2'
+						parse_mode: 'MarkdownV2',
 					})
+				} else {
+					ctx.answerCbQuery(errorMessage)
 				}
 				return
 			}
@@ -33,15 +34,15 @@ const createRoleMiddleware = (requiredRole: UserRole, errorMessage: string) => {
 
 export const chelOnly = createRoleMiddleware(
 	UserRole.Чел,
-	'Ботом могут пользоваться только зарегистрированные пользователи\\. Напиши @welnyr или своему другу, чтобы он тебя пригласил\\.'
+	'Ботом могут пользоваться только зарегистрированные пользователи\\. Напиши @welnyr или своему другу, чтобы он тебя пригласил\\.',
 )
 
 export const superChelOnly = createRoleMiddleware(
 	UserRole.СуперЧел,
-	'Не трогай, этот функционал только для админов'
+	'Не трогай, этот функционал только для админов',
 )
 
 export const ovnerOnly = createRoleMiddleware(
 	UserRole.Овнер,
-	'Этот функционал только для овнера'
+	'Этот функционал только для овнера',
 )

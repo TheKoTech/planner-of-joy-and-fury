@@ -25,7 +25,7 @@ export class Parser {
 		}
 	}
 
-	static parseEvent(text: string): DBEvent | undefined {
+	static parseEvent(text: string): Pick<DBEvent, 'name' | 'date'> | undefined {
 		const match = Parser.extractEventMatch(text)
 
 		if (!match) return undefined
@@ -35,7 +35,6 @@ export class Parser {
 		return {
 			name: Parser.parseEventName(match.name),
 			date: date.format(),
-			replies: {},
 		}
 	}
 

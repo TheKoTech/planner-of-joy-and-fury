@@ -30,15 +30,15 @@ export default class Bot {
 		Bot.instance.use(session())
 		Bot.instance.use(stage.middleware())
 
-		Bot.instance.hears(/^мой робот (тесла|tesla)/i, async (ctx) =>
+		Bot.instance.hears(/^мой робот (тесла|tesla)/i, async ctx =>
 			ctx.replyWithPhoto(
 				{ source: 'src/assets/tesla.png' },
 				{
 					disable_notification: true,
 					// @ts-expect-error somehow this is not a field, even though it definitely is
 					reply_to_message_id: ctx.message.message_id,
-				}
-			)
+				},
+			),
 		)
 
 		Bot.registerCommands()
@@ -64,13 +64,13 @@ export default class Bot {
 
 		Object.entries(actionHandlers).forEach(([action, status]) => {
 			const matcher = new RegExp(`^plan__${action}:?(.*)$`)
-			bot.action(matcher, chelOnly(true), async (ctx) => {
+			bot.action(matcher, chelOnly(true), async ctx => {
 				console.log(`Received action plan__${action} with status ${status}`)
 				await handleEventReply(ctx, { status })
 			})
 		})
 
-		bot.action(/^plan__pick-time:?(.*)?/, chelOnly(true), async (ctx) => {
+		bot.action(/^plan__pick-time:?(.*)?/, chelOnly(true), async ctx => {
 			const eventId =
 				ctx.match[1] ??
 				`${ctx.chat?.id}:${ctx.callbackQuery.message?.message_id}`
@@ -78,7 +78,17 @@ export default class Bot {
 			await ctx.scene.enter(SceneList.PickTime, { eventId })
 		})
 
-		bot.action(/^ban__revert:(.*)/, superChelOnly(true), async (ctx) => {
+		/** @todo make this a scene */
+		bot.action(/^plan__delete:?(.*)?/, chelOnly(true), async ctx => {
+			console.log('Deleting event')
+			const eventId = ctx.match[1]
+				? ctx.match[1]
+				: `${ctx.chat!.id}:${ctx.callbackQuery.message!.message_id}`
+
+			ctx.scene.enter(SceneList.Delete, { eventId: eventId })
+		})
+
+		bot.action(/^ban__revert:(.*)/, superChelOnly(true), async ctx => {
 			const userId = ctx.match[1]
 			const user = DB.getUser(+userId)
 			const isUnBanned = DB.unBan(+userId, ctx.from.id)
@@ -91,7 +101,7 @@ export default class Bot {
 				ctx.chat?.id,
 				ctx.callbackQuery.message!.message_id,
 				undefined,
-				`${user?.username} был забанен, а потом разбанен`
+				`${user?.username} был забанен, а потом разбанен`,
 			)
 		})
 	}
@@ -102,29 +112,29 @@ export default class Bot {
 		bot.command(
 			'start',
 			chelOnly(),
-			async (ctx) => await ctx.scene.enter(SceneList.Start)
+			async ctx => await ctx.scene.enter(SceneList.Start),
 		)
 		bot.command(
 			'plan',
 			chelOnly(),
-			async (ctx) => await ctx.scene.enter(SceneList.Plan)
+			async ctx => await ctx.scene.enter(SceneList.Plan),
 		)
 		bot.command(
 			'settings',
 			chelOnly(),
-			async (ctx) => await ctx.scene.enter(SceneList.Settings)
+			async ctx => await ctx.scene.enter(SceneList.Settings),
 		)
 		bot.command(
 			'setname',
 			chelOnly(),
-			async (ctx) => await ctx.scene.enter(SceneList.SetName)
+			async ctx => await ctx.scene.enter(SceneList.SetName),
 		)
 		bot.command(
 			'listevents',
 			chelOnly(),
-			async (ctx) => await ctx.scene.enter(SceneList.ListEvents)
+			async ctx => await ctx.scene.enter(SceneList.ListEvents),
 		)
-		bot.command('invite', superChelOnly(), async (ctx) => {
+		bot.command('invite', superChelOnly(), async ctx => {
 			const match = ctx.message.text.match(/^\/invite\s*@?(.*)$/)
 			console.log(match)
 
@@ -133,15 +143,15 @@ export default class Bot {
 			})
 		})
 
-		bot.command(/^ban.*$/, superChelOnly(), async (ctx) =>
+		bot.command(/^ban.*$/, superChelOnly(), async ctx =>
 			ctx.scene.enter(SceneList.Ban, {
 				username: ctx.message.text.match(/^\/ban\s*@?(.*)$/)?.[1],
-			})
+			}),
 		)
 		bot.command(
 			/^invite.*$/,
 			superChelOnly(),
-			async (ctx) => await ctx.scene.enter(SceneList.Invite)
+			async ctx => await ctx.scene.enter(SceneList.Invite),
 		)
 
 		// bot.command(

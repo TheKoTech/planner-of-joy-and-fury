@@ -7,4 +7,5 @@ export const enum SceneList {
 	ListEvents = 'c_list-events',
 	Ban = 'c_ban',
 	Invite = 'c_invite',
+	Delete = 'c_delete',
 }

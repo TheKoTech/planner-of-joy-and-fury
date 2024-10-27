@@ -8,6 +8,7 @@ import { setName } from './scenes/set-name.mjs'
 import { settings } from './scenes/settings.mjs'
 import { start } from './scenes/start.mjs'
 import { SceneContext } from './types/scene-context.mjs'
+import { deleteEvent } from './scenes/delete-event.mjs'
 
 export const stage = new Scenes.Stage<Scenes.SceneContext<SceneContext>>([
 	start,
@@ -18,4 +19,5 @@ export const stage = new Scenes.Stage<Scenes.SceneContext<SceneContext>>([
 	listEvents,
 	ban,
 	invite,
+	deleteEvent,
 ])

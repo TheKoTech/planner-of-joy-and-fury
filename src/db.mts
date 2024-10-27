@@ -28,12 +28,12 @@ export default class DB {
 			return dbData.users[query]
 		}
 
-		return Object.values(dbData.users).find((user) => user.username === query)
+		return Object.values(dbData.users).find(user => user.username === query)
 	}
 
 	static getUserId(username: string): number | undefined {
 		const user = Object.entries(this.db.data.users).find(
-			([, u]) => u.username === username
+			([, u]) => u.username === username,
 		)
 
 		return user?.[0] ? +user?.[0] : undefined
@@ -57,7 +57,7 @@ export default class DB {
 
 		if (!by || by.role < UserRole.СуперЧел) {
 			console.error(
-				`User with id ${byId} has insufficient rights to invite user ${username}`
+				`User with id ${byId} has insufficient rights to invite user ${username}`,
 			)
 			throw new Error('У вас недостаточно прав')
 		}
@@ -67,7 +67,7 @@ export default class DB {
 
 		if (dbUser && dbUser.role !== UserRole.ЧелВБане) throwExists()
 
-		const isInvited = this.db.data.pendingInvites.some((u) => u === username)
+		const isInvited = this.db.data.pendingInvites.some(u => u === username)
 
 		if (isInvited) throwExists()
 
@@ -93,7 +93,7 @@ export default class DB {
 		const username = user.username
 
 		const invitedUserIndex = this.db.data.pendingInvites.findIndex(
-			(u) => u === username
+			u => u === username,
 		)
 
 		if (!username || invitedUserIndex === -1) return
@@ -133,7 +133,7 @@ export default class DB {
 	private static updateRole(
 		targetId: number,
 		byId: number,
-		role: UserRole
+		role: UserRole,
 	): boolean {
 		const target = DB.getUser(targetId)
 		const by = DB.getUser(byId)
@@ -157,6 +157,38 @@ export default class DB {
 		this.db.write()
 	}
 
+	static canDeleteEvent(eventId: string, fromId: number): boolean
+	static canDeleteEvent(event: DBEvent, fromId: number): boolean
+
+	static canDeleteEvent(event: DBEvent | string, fromId: number): boolean {
+		if (typeof event === 'string') {
+			return DB.getEvent(event)?.authorId === fromId
+		}
+
+		return event.authorId === fromId
+	}
+
+	static deleteEvent(eventId: string, fromId: number): DBEvent | undefined {
+		const event = DB.getEvent(eventId)
+
+		if (!event) {
+			console.error(`Event with id ${eventId} doesn't exist`)
+			throw Error(`События с ID ${eventId} не существует`)
+		}
+
+		if (!DB.canDeleteEvent(event, fromId)) {
+			console.log(
+				`User ${fromId} tried to delete event ${eventId}, but has insufficient rights`,
+			)
+			return
+		}
+
+		delete this.db.data.events[eventId]
+		this.db.write()
+
+		return event
+	}
+
 	static getEvent(id: string): DBEvent | undefined {
 		console.log(`Querying event with id ${id}`)
 		return this.db.data.events[id]
@@ -169,7 +201,7 @@ export default class DB {
 	static updateEventReply(
 		eventId: string,
 		userId: number,
-		reply: DBEventReply
+		reply: DBEventReply,
 	): boolean {
 		const event = DB.getEvent(eventId)
 
@@ -182,7 +214,7 @@ export default class DB {
 			console.log(
 				`Skipped updating event ${eventId}: Nothing changed`,
 				reply,
-				event.replies[userId]
+				event.replies[userId],
 			)
 			return false
 		}

@@ -5,6 +5,7 @@ import { SceneList } from '../enums/scene-list.mjs'
 import { getEventMessageOptions } from '../utils/get-event-message-options.mjs'
 import { getEventMessageText } from '../utils/get-event-message-text.mjs'
 import { Parser } from '../utils/parser.mjs'
+import { DBEvent } from '../types/db-event.mjs'
 
 export const plan = createBaseScene(SceneList.Plan)
 
@@ -23,21 +24,26 @@ plan.enter(async ctx => {
 
 plan.on('text', async ctx => {
 	const messageText = ctx.message.text
-	let event
+	let parsedEvent
 	try {
-		event = Parser.parseEvent(messageText)
+		parsedEvent = Parser.parseEvent(messageText)
 	} catch (e) {
 		console.error(e)
 		ctx.reply((e as Error).message)
 		ctx.scene.leave()
 	}
 
-	if (!event) {
+	if (!parsedEvent) {
 		console.error('Failed to parse event', messageText)
 		await ctx.reply('Ты хуйню написал какую-то. Попробуй ещё раз, что ли')
 		return ctx.scene.leave()
 	}
 
+	const event: DBEvent = {
+		...parsedEvent,
+		replies: {},
+		authorId: ctx.from.id,
+	}
 	event.replies[ctx.from.id] = {
 		status: EventReplyStatus.Accepted,
 	}
